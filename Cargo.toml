@@ -9,4 +9,4 @@ crate-type = ["staticlib"]
 [dependencies]
 rlibc = "*"
 spin = "*"
-x86 = {git = "https://github.com/rafalmiel/rust-x86.git"}
+x86 = {path = "crates/rust-x86"}
