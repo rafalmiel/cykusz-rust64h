@@ -18,7 +18,7 @@ bits 32
 start:
   cli
 
-	mov esp, stack_top
+	mov esp, boot_stack_top
 	mov edi, ebx       ;Multiboot address
 
 	call test_multiboot
@@ -46,6 +46,6 @@ error:
 	hlt
 
 section .bss
-stack_bottom:
+boot_stack_bottom:
 	resb 4096
-stack_top:
+boot_stack_top:

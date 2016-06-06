@@ -16,6 +16,7 @@ mod vga;
 
 #[no_mangle]
 pub extern "C" fn rust_main() {
+    unsafe { x86::tlb::flush_all() };
 
     vga::clear_screen();
 
