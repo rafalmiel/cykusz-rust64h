@@ -2,7 +2,6 @@ global long_mode_start
 
 extern setup_SSE
 extern higher_half_start
-extern unmap_lower_half
 
 section .text
 bits 64

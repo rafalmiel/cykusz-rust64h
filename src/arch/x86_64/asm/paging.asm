@@ -1,6 +1,5 @@
 global setup_page_tables
 global enable_paging
-global unmap_lower_half
 global p4_table
 
 section .text
@@ -81,12 +80,6 @@ enable_paging:
 	mov cr0, eax
 
 	ret
-
-unmap_lower_half:
-	mov eax, 0x0
-	mov [p4_table], eax
-	mov eax, p4_table
-	mov cr3, eax
 
 section .bss
 align 4096
