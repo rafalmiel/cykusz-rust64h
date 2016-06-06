@@ -15,9 +15,7 @@ long_mode_start:
 	mov rax, higher_half_start
 	jmp rax
 
-	hlt
-
 section .stack
 stack_bottom:
-	resb 4096*2
+	times 4096*2 db 0
 stack_top:

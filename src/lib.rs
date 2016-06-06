@@ -21,12 +21,6 @@ pub extern "C" fn rust_main() {
     vga::clear_screen();
 
     println!("Hello world!");
-
-    unsafe {
-        loop {
-            asm!("hlt");
-        }
-    }
 }
 
 #[cfg(not(test))]

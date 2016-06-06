@@ -17,3 +17,7 @@ higher_half_start:
 
   ; Jump to rust code
   call rust_main
+
+  .loop
+    hlt
+    jmp $
