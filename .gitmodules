@@ -1,3 +1,0 @@
-[submodule "crates/rust-x86"]
-	path = crates/rust-x86
-	url = https://github.com/rafalmiel/rust-x86.git
