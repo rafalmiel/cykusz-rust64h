@@ -27,4 +27,24 @@ impl Info {
             }
         )
     }
+
+    pub fn address_tag(&self) -> Option<&'static tags::address::Address> {
+        self.tags().find(
+            |t| t.typ == 2
+        ).map(
+            |t| unsafe {
+                &*(t as *const tags::Tag as *const tags::address::Address)
+            }
+        )
+    }
+
+    pub fn elf_tag(&self) -> Option<&'static tags::elf::Elf> {
+        self.tags().find(
+            |t| t.typ == 9
+        ).map(
+            |t| unsafe {
+                &*(t as *const tags::Tag as *const tags::elf::Elf)
+            }
+        )
+    }
 }

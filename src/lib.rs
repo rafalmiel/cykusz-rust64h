@@ -8,6 +8,8 @@ extern crate rlibc;
 extern crate spin;
 #[macro_use]
 extern crate x86;
+#[macro_use]
+extern crate bitflags;
 
 mod arch;
 
@@ -36,10 +38,21 @@ pub extern "C" fn rust_main(multiboot_addr: u64) {
 
     let mem = mboot_info.memory_map_tag().unwrap();
 
-    println!("mem tag size: {}, ver: {}, es: {}", mem.size, mem.entry_ver, mem.entry_size);
+    println!("mem tag size: {}, ver: {}, es: {}", mem.tag.size, mem.entry_ver, mem.entry_size);
 
     for e in mem.entries() {
         println!("Mem entry: base_addr: 0x{:x}  len: 0x{:x}, type: {}", e.base_addr, e.length, e.typ);
+    }
+
+    //let addr = mboot_info.address_tag().unwrap();
+
+    // println!("size: {}, Header addr: 0x{:x}, load addr: 0x{:x}, load_end_addr: 0x{:x}, bss end: 0x{:x}",
+    //             addr.flags, addr.header_addr, addr.load_addr, addr.load_end_addr, addr.bss_end_addr);
+
+    let elf = mboot_info.elf_tag().unwrap();
+
+    for s in elf.sections() {
+        println!("Elf typ: {}, flags: 0x{:x}, addr: 0x{:x}, size: 0x{:x}", s.typ, s.flags, s.addr, s.size);
     }
 }
 

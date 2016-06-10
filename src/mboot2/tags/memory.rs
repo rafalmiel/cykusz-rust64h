@@ -1,7 +1,8 @@
+use mboot2::tags::Tag;
+
 #[repr(C)]
 pub struct Memory {
-    pub typ:            u32,
-    pub size:           u32,
+    pub tag:            Tag,
     pub entry_size:     u32,
     pub entry_ver:      u32,
     pub first_entry:    MemoryEntry
@@ -25,7 +26,7 @@ impl Memory {
     pub fn entries(&self) -> MemoryIter {
         MemoryIter {
             current: (&self.first_entry) as *const _,
-            last: ((self as *const _) as u64 + self.size as u64 - self.entry_size as u64)
+            last: ((self as *const _) as u64 + self.tag.size as u64 - self.entry_size as u64)
                 as *const _,
             entry_size: self.entry_size
         }

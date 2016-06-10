@@ -9,4 +9,8 @@ crate-type = ["staticlib"]
 [dependencies]
 rlibc = "*"
 spin = "*"
-x86 = "*" 
+x86 = "*"
+
+[dependencies.bitflags]
+version = "0.4.0"
+features = ["no_std"]
