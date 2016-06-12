@@ -29,12 +29,12 @@ setup_page_tables:
 
 	;map first P3 entry to 1 GB huge page
 	mov eax, 0
-	or eax, 0b10000011		; Huge table + present + writable
+	or eax, 0b10000111		; Huge table + present + writable
 	mov [p3_table], eax
 
 	;map first P3 high table entry to 1GB huge page
 	mov eax, 0
-	or eax, 0b10000011		; Huge table + present + writable
+	or eax, 0b10000111		; Huge table + present + writable
 	mov [p3_table_high], eax
 
 	; Map all P3 table phys tables to 1 GB
@@ -42,7 +42,7 @@ setup_page_tables:
 .map_p3_table_phys
 	mov eax, 0x40000000	; 1GB
 	mul ecx
-	or eax, 0b10000011	; Huge table + present + writable
+	or eax, 0b10000111	; Huge table + present + writable
 	mov [p3_table_phys + ecx * 8], eax
 	inc ecx
 	cmp ecx, 512
@@ -83,6 +83,4 @@ p3_table:
 p3_table_high:
 	resb 4096
 p3_table_phys:
-	resb 4096
-p2_table:
 	resb 4096

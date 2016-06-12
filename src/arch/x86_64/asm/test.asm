@@ -34,9 +34,14 @@ test_long_mode:
 	cpuid			; CPU identification
 	test edx, 1 << 29	; Test if the LM-bit, which is bit 29, is set in the D-register
 	jz .no_long_mode	; They aren't, there is no long mode
+	test edx, 1 << 16	; Test 1 GB pages support
+	jz .no_1gb_pages	; 1 gb pages not supported
 	ret
 .no_long_mode:
 	mov al, "2"
+	jmp error
+.no_1gb_pages:
+	mov al, "3"
 	jmp error
 
 test_multiboot:
