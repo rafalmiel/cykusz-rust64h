@@ -3,7 +3,7 @@ use spin::Mutex;
 
 use arch::cpuio::Port;
 
-use ::phys_to_virt;
+use arch::phys_to_virt;
 
 macro_rules! println {
     ($fmt:expr) => (print!(concat!($fmt, "\n")));

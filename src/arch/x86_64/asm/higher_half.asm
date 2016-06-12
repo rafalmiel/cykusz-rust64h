@@ -1,4 +1,4 @@
-extern rust_main
+extern x86_64_rust_main
 extern p4_table
 
 global higher_half_start
@@ -16,7 +16,7 @@ higher_half_start:
   mov cr3, rax
 
   ; Jump to rust code
-  call rust_main
+  call x86_64_rust_main
 
   .loop
     hlt
