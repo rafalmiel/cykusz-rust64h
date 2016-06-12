@@ -14,3 +14,7 @@ x86 = "*"
 [dependencies.bitflags]
 version = "*"
 features = ["no_std"]
+
+[dependencies.lazy_static]
+git = "https://github.com/rust-lang-nursery/lazy-static.rs.git"
+features = ["spin_no_std"]

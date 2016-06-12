@@ -3,6 +3,8 @@ use spin::Mutex;
 
 use arch::cpuio::Port;
 
+use ::phys_to_virt;
+
 macro_rules! println {
     ($fmt:expr) => (print!(concat!($fmt, "\n")));
     ($fmt:expr, $($arg:tt)*) => (print!(concat!($fmt, "\n"), $($arg)*));
@@ -58,12 +60,14 @@ static CURSOR_INDEX: Mutex<Port<u8>> = Mutex::new(unsafe { Port::new(0x3D4) });
 
 static CURSOR_DATA: Mutex<Port<u8>> = Mutex::new(unsafe { Port::new(0x3D5) });
 
-pub static WRITER: Mutex<Writer> = Mutex::new(Writer {
-    column: 0,
-    row: 0,
-    color: ColorCode::new(Color::LightGreen, Color::Black),
-    buffer: unsafe { Unique::new((0xFFFF800000000000 as u64 + 0xb8000 as u64) as *mut _) },
-});
+lazy_static! {
+    pub static ref WRITER: Mutex<Writer> = Mutex::new(Writer {
+        column: 0,
+        row: 0,
+        color: ColorCode::new(Color::LightGreen, Color::Black),
+        buffer: unsafe { Unique::new((phys_to_virt(0xb8000)) as *mut _) },
+    });
+}
 
 struct Buffer {
     chars: [ScreenChar; BUFFER_WIDTH * BUFFER_HEIGHT],

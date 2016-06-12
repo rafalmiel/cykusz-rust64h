@@ -10,6 +10,8 @@ extern crate spin;
 extern crate x86;
 #[macro_use]
 extern crate bitflags;
+#[macro_use]
+extern crate lazy_static;
 
 mod arch;
 
@@ -18,8 +20,22 @@ mod vga;
 mod mboot2;
 mod util;
 
-fn phys_to_virt(addr: u64) -> u64 {
-    addr + 0xFFFF_8000_0000_0000
+pub const VIRT : u64 = 0xFFFFFF0000000000;
+
+pub fn phys_to_virt(addr: u64) -> u64 {
+    if addr < VIRT {
+        addr + VIRT
+    } else {
+        addr
+    }
+}
+
+pub fn virt_to_phys(addr: u64) -> u64 {
+    if addr >= VIRT {
+        addr - VIRT
+    } else {
+        addr
+    }
 }
 
 #[no_mangle]
@@ -54,6 +70,9 @@ pub extern "C" fn rust_main(multiboot_addr: u64) {
     for s in elf.sections() {
         println!("Elf typ: {}, flags: 0x{:x}, addr: 0x{:x}, size: 0x{:x}", s.typ, s.flags, s.addr, s.size);
     }
+
+    println!("Kernel start: 0x{:x}", virt_to_phys(mboot_info.kernel_start_addr()));
+    println!("Kernel end  : 0x{:x}", virt_to_phys(mboot_info.kernel_end_addr()));
 }
 
 #[cfg(not(test))]

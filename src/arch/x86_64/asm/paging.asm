@@ -13,48 +13,41 @@ setup_page_tables:
 
 	; Entry for higher half kernel
 	mov eax, p3_table_high
-	or eax, 0b11 ; present + writable
+	or eax, 0b11 ; huge present + writable
+	mov [p4_table + 510 * 8], eax
+
+	; Entry for physical mem kernel mapping
+	; at 0xffff800000000000
+	mov eax, p3_table_phys
+	or eax, 0b11 ; huge present + writable
 	mov [p4_table + 256 * 8], eax
 
 	; Recursive page table mapping
-	mov eax, p4_table
-	or eax, 0b11 ; present + writable
-	mov [p4_table + 511 * 8], eax
+;	mov eax, p4_table
+;	or eax, 0b11 ; present + writable
+;	mov [p4_table + 511 * 8], eax
 
-	;map first P3 entry to P2 table
-	mov eax, p2_table
-	or eax, 0b11		; present + writable
+	;map first P3 entry to 1 GB huge page
+	mov eax, 0
+	or eax, 0b10000011		; Huge table + present + writable
 	mov [p3_table], eax
 
-	;map first P3 entry to P2 table high (higher half)
-	mov eax, p2_table_high
-	or eax, 0b11		; present + writable
+	;map first P3 high table entry to 1GB huge page
+	mov eax, 0
+	or eax, 0b10000011		; Huge table + present + writable
 	mov [p3_table_high], eax
 
-	; map each P2 entry to a huge 2MiB page
+	; Map all P3 table phys tables to 1 GB
 	mov ecx, 0
-.map_p2_table:
-	; map ecx-tx P2 entry to a huge page that starts at address 2MiB*ecx
-	mov eax, 0x200000		; 2MiB
-	mul ecx				; start address of ecx-th page
-	or eax, 0b10000111		; preset + writable + huge
-	mov [p2_table + ecx * 8], eax 	; map ecx-th entry
-
+.map_p3_table_phys
+	mov eax, 0x40000000	; 1GB
+	mul ecx
+	or eax, 0b10000011	; Huge table + present + writable
+	mov [p3_table_phys + ecx * 8], eax
 	inc ecx
 	cmp ecx, 512
-	jne .map_p2_table
+	jne .map_p3_table_phys
 
-	mov ecx, 0
-.map_p2_table_high:
-	; map ecx-tx P2 high entry to a huge page that starts at address 2MiB*ecx
-	mov eax, 0x200000		; 2MiB
-	mul ecx				; start address of ecx-th page
-	or eax, 0b10000111		; preset + writable + huge
-	mov [p2_table_high + ecx * 8], eax 	; map ecx-th entry
-
-	inc ecx
-	cmp ecx, 512
-	jne .map_p2_table_high
 	ret
 
 enable_paging:
@@ -89,7 +82,7 @@ p3_table:
 	resb 4096
 p3_table_high:
 	resb 4096
-p2_table:
+p3_table_phys:
 	resb 4096
-p2_table_high:
+p2_table:
 	resb 4096

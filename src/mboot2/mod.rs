@@ -12,6 +12,18 @@ pub unsafe fn load(addr: u64) -> &'static Info {
 }
 
 impl Info {
+    pub fn kernel_start_addr(&self) -> u64 {
+        let item = self.elf_tag().unwrap().sections().nth(0).unwrap();
+
+        item.addr
+    }
+
+    pub fn kernel_end_addr(&self) -> u64 {
+        let item = self.elf_tag().unwrap().sections().last().unwrap();
+
+        item.addr + item.size
+    }
+
     pub fn tags(&self) -> tags::TagIter {
         tags::TagIter {
             current: &self.tag as *const _

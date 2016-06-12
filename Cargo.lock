@@ -3,6 +3,7 @@ name = "cykusz_rust64h"
 version = "0.1.0"
 dependencies = [
  "bitflags 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "lazy_static 0.2.1 (git+https://github.com/rust-lang-nursery/lazy-static.rs.git)",
  "rlibc 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "spin 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "x86 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -25,6 +26,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "byteorder 0.3.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustc-serialize 0.3.19 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "lazy_static"
+version = "0.2.1"
+source = "git+https://github.com/rust-lang-nursery/lazy-static.rs.git#ffe65c818474f863945ca535c0e53f3b8b848ff7"
+dependencies = [
+ "spin 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

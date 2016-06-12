@@ -18,26 +18,26 @@ SECTIONS {
 	. = ALIGN(4K);
 	__kernel_text_start = .;
 
-	.text(0xFFFF800000000000 + __kernel_text_start) : AT(__kernel_text_start)
+	.text(0xFFFFFF0000000000 + __kernel_text_start) : AT(__kernel_text_start)
 	{
 		build/arch/x86_64/asm/higher_half.o(.text* .rodata* .data* .bss*)
     *(.rodata .rodata.*)
 		*(.text .text.*)
 	}
 
-	. = ALIGN(4K) - 0xFFFF800000000000;
+	. = ALIGN(4K) - 0xFFFFFF0000000000;
 	__kernel_data_start = .;
 
-	.data(0xFFFF800000000000 + __kernel_data_start) : AT(__kernel_data_start)
+	.data(0xFFFFFF0000000000 + __kernel_data_start) : AT(__kernel_data_start)
 	{
 		*(.data .data.*)
 		. = ALIGN(4K);
 	}
 
-	. = ALIGN(4K) - 0xFFFF800000000000;
+	. = ALIGN(4K) - 0xFFFFFF0000000000;
 	__kernel_bss_start = .;
 
-	.bss(0xFFFF800000000000 + __kernel_bss_start) : AT(__kernel_bss_start)
+	.bss(0xFFFFFF0000000000 + __kernel_bss_start) : AT(__kernel_bss_start)
   {
 			build/arch/x86_64/asm/long_mode_init.o(.stack)
       *(.bss .bss.*)
