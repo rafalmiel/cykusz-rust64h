@@ -1,5 +1,7 @@
 mod tags;
 
+pub use self::tags::*;
+
 #[repr(C)]
 pub struct Info {
     pub size:       u32,

@@ -16,6 +16,7 @@ pub struct MemoryEntry {
     pub reserved:       u32
 }
 
+#[derive(Clone)]
 pub struct MemoryIter {
     current:    *const MemoryEntry,
     last:       *const MemoryEntry,
@@ -51,7 +52,7 @@ impl Iterator for MemoryIter {
             if entry.typ == 1 {
                 Some(entry)
             } else {
-                Some(entry)
+                self.next()
             }
         }
     }

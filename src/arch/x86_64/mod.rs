@@ -1,4 +1,5 @@
 pub mod cpuio;
+pub mod mm;
 
 use x86;
 use vga;
@@ -51,6 +52,12 @@ pub extern "C" fn x86_64_rust_main(multiboot_addr: u64) {
 
     println!("mboot2 start: 0x{:x}", virt_to_phys(multiboot_addr));
     println!("mboot2 end  : 0x{:x}", virt_to_phys(multiboot_addr + mboot_info.size as u64));
+
+    mm::phys::init(mem.entries(),
+                   virt_to_phys(mboot_info.kernel_start_addr()),
+                   virt_to_phys(mboot_info.kernel_end_addr()),
+                   virt_to_phys(multiboot_addr),
+                   virt_to_phys(multiboot_addr + mboot_info.size as u64));
 
     ::rust_main();
 }
