@@ -16,7 +16,6 @@ pub struct MemoryEntry {
     pub reserved:       u32
 }
 
-#[derive(Clone)]
 pub struct MemoryIter {
     current:    *const MemoryEntry,
     last:       *const MemoryEntry,

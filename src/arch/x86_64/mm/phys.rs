@@ -1,6 +1,7 @@
 use ::arch::mm::PhysAddr;
 use ::mboot2::memory::MemoryIter;
 use ::arch::mm::PAGE_SIZE;
+use ::arch::phys_to_physmap;
 
 struct PhysMemIterator {
     current:        PhysAddr,
@@ -78,7 +79,39 @@ pub fn init(mm_iter:        MemoryIter,
             mboot_end:      PhysAddr) {
     let iter = PhysMemIterator::new(mm_iter, kern_start, kern_end, mboot_start, mboot_end);
 
-    for el in iter {
-        println!("Phys addr: 0x{:x}", el);
+    println!("Initialising physical memory");
+
+    let mut cnt = 0;
+
+    let mut prev: Option<PhysAddr> = None;
+
+    for (i, el) in iter.enumerate() {
+        if let Some(p) = prev {
+            let physmap = phys_to_physmap(p);
+
+            let addr = physmap as *mut PhysAddr;
+
+            unsafe {
+                *addr = el;
+                if i % 100 == 0 {
+                    println!("Value at 0x{:x} is 0x{:x}", addr as PhysAddr, *addr);
+                }
+            }
+        }
+
+        cnt += 1;
+        prev = Some(el);
     }
+
+    if let Some(p) = prev {
+        let addr = phys_to_physmap(p) as *mut PhysAddr;
+
+        unsafe {
+            *addr = 0xFFFF_FFFF_FFFF_FFFF;
+            println!("Value at 0x{:x} is 0x{:x}", addr as PhysAddr, *addr);
+        }
+
+    }
+
+    println!("Physical memory initialisation complete after {} iterations", cnt);
 }
