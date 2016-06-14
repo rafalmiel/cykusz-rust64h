@@ -20,7 +20,7 @@ clean:
 	cargo clean
 
 run: $(iso)
-	qemu-system-x86_64 -drive format=raw,file=$(iso) -no-reboot -m 4
+	qemu-system-x86_64 -drive format=raw,file=$(iso) -no-reboot -m 512
 debug: $(iso)
 	qemu-system-x86_64 -drive format=raw,file=$(iso) -no-reboot -s -S
 gdb:

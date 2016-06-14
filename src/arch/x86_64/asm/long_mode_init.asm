@@ -17,5 +17,5 @@ long_mode_start:
 
 section .stack
 stack_bottom:
-	times 4096*2 db 0
+	times 4096*4 db 0
 stack_top:
