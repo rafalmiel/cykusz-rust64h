@@ -5,12 +5,27 @@ use arch::mm::PhysAddr;
 use arch::phys_to_physmap;
 use mboot2::memory::MemoryIter;
 
-static PHYS_HEAD: Mutex<Option<Frame>> = Mutex::new(None);
-static PHYS_TAIL: Mutex<Option<Frame>> = Mutex::new(None);
+const LIST_ADDR_INVALID: PhysAddr = 0xFFFF_FFFF_FFFF_FFFF;
+
+const fn is_list_addr_valid(addr: PhysAddr) -> bool {
+    addr != LIST_ADDR_INVALID
+}
+
+struct PhysAllocatorList {
+    head:           PhysAddr,
+    tail:           PhysAddr
+}
+
+static PHYS_LIST: Mutex<PhysAllocatorList> = Mutex::new(
+    PhysAllocatorList {
+        head: LIST_ADDR_INVALID,
+        tail: LIST_ADDR_INVALID
+    }
+);
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Frame {
-    number:        u64
+    number:         u64
 }
 
 impl Frame {
@@ -117,6 +132,42 @@ impl Iterator for PhysMemIterator {
     }
 }
 
+pub fn allocate() -> Option<Frame> {
+    let mut list = PHYS_LIST.lock();
+
+    if is_list_addr_valid(list.head) {
+        let ret = list.head;
+
+        if list.head != list.tail {
+            let next_addr = unsafe {
+                *(phys_to_physmap(list.head) as *const PhysAddr)
+            };
+            list.head = next_addr;
+        } else {
+            list.head = LIST_ADDR_INVALID;
+            list.tail = LIST_ADDR_INVALID;
+        }
+
+        return Some(Frame::new(ret));
+    }
+
+    None
+}
+
+pub fn deallocate(frame: Frame) {
+    let mut list = PHYS_LIST.lock();
+
+    if is_list_addr_valid(list.tail) {
+        unsafe {
+            *(phys_to_physmap(list.tail) as *mut PhysAddr) = frame.address();
+        }
+        list.tail = frame.address();
+    } else {
+        list.head = frame.address();
+        list.tail = frame.address();
+    }
+}
+
 pub fn init(mm_iter:        MemoryIter,
             kern_start:     PhysAddr,
             kern_end:       PhysAddr,
@@ -143,11 +194,12 @@ pub fn init(mm_iter:        MemoryIter,
                 *addr = el.address();
             }
 
-            if max_cnt == 0 {
-                head = Some(el.clone());
-                println!("0x{:x}", el.address());
-            }
             tail = Some(el.clone());
+        }
+
+        if max_cnt == 0 {
+            head = Some(el.clone());
+            println!("head is 0x{:x}", el.address());
         }
 
         max_cnt += 1;
@@ -159,17 +211,23 @@ pub fn init(mm_iter:        MemoryIter,
         let addr = phys_to_physmap(p.address()) as *mut PhysAddr;
 
         unsafe {
-            *addr = 0xFFFF_FFFF_FFFF_FFFF;
+            *addr = LIST_ADDR_INVALID;
             println!("Value at 0x{:x} is 0x{:x}", addr as PhysAddr, *addr);
         }
 
     }
 
-    let mut h = PHYS_HEAD.lock();
-    let mut t = PHYS_TAIL.lock();
+    let mut l = PHYS_LIST.lock();
 
-    *h = head;
-    *t = tail;
+    if let Some(f) = head {
+        println!("Init head to 0x{:x}", f.address());
+        l.head = f.address();
+    }
+
+    if let Some(f) = tail {
+        println!("Init tail to 0x{:x}", f.address());
+        l.tail = f.address();
+    }
 
     println!("Physical memory initialisation complete after {} iterations", max_cnt);
 }
