@@ -4,6 +4,14 @@ use arch::mm::PAGE_SIZE;
 use arch::mm::PhysAddr;
 use arch::phys_to_physmap;
 use mboot2::memory::MemoryIter;
+use mm;
+
+
+impl Drop for ::mm::frame::Frame {
+    fn drop(&mut self) {
+        deallocate(self);
+    }
+}
 
 const LIST_ADDR_INVALID: PhysAddr = 0xFFFF_FFFF_FFFF_FFFF;
 
@@ -94,7 +102,7 @@ impl Iterator for PhysMemIterator {
     }
 }
 
-pub fn allocate() -> Option<::mm::frame::Frame> {
+pub fn allocate() -> Option<mm::frame::Frame> {
     let mut list = PHYS_LIST.lock();
 
     if is_list_addr_valid(list.head) {
@@ -116,7 +124,7 @@ pub fn allocate() -> Option<::mm::frame::Frame> {
     None
 }
 
-pub fn deallocate(frame: &::mm::frame::Frame) {
+fn deallocate(frame: &mm::frame::Frame) {
     let mut list = PHYS_LIST.lock();
 
     if is_list_addr_valid(list.tail) {

@@ -1,6 +1,7 @@
 #![feature(lang_items, asm,unique)]
 #![feature(const_fn)]
 #![feature(associated_type_defaults)]
+#![feature(pub_restricted)]
 #![no_std]
 #![allow(dead_code)]
 

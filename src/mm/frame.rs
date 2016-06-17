@@ -37,9 +37,3 @@ impl Frame {
         }
     }
 }
-
-impl Drop for Frame {
-    fn drop(&mut self) {
-        ::arch::mm::phys::deallocate(self);
-    }
-}
