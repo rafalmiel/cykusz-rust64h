@@ -23,52 +23,8 @@ static PHYS_LIST: Mutex<PhysAllocatorList> = Mutex::new(
     }
 );
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Frame {
-    number:         u64
-}
-
-impl Frame {
-    pub fn new(address: PhysAddr) -> Frame {
-        Frame {
-            number: address / PAGE_SIZE
-        }
-    }
-
-    pub fn address(&self) -> PhysAddr {
-        self.number * PAGE_SIZE
-    }
-
-    pub fn end_address(&self) -> PhysAddr {
-        self.number * PAGE_SIZE + PAGE_SIZE
-    }
-
-    pub fn number(&self) -> u64 {
-        self.number
-    }
-
-    pub fn next(&self) -> Frame {
-        Frame {
-            number: self.number + 1
-        }
-    }
-
-    fn clone(&self) -> Frame {
-        Frame {
-            number: self.number
-        }
-    }
-
-    fn not_contains(&self, start: PhysAddr, end: PhysAddr) -> bool {
-        let saddr = self.address();
-        let eaddr = self.end_address();
-
-        (saddr < start && eaddr < start) || (saddr >= end && eaddr >= end)
-    }
-}
-
 struct PhysMemIterator {
-    current:        Frame,
+    current:        PhysAddr,
     mm_iter:        MemoryIter,
     mm_start:       PhysAddr,
     mm_end:         PhysAddr,
@@ -76,6 +32,12 @@ struct PhysMemIterator {
     kern_end:       PhysAddr,
     mboot_start:    PhysAddr,
     mboot_end:      PhysAddr
+}
+
+fn not_contains(saddr: PhysAddr, start: PhysAddr, end: PhysAddr) -> bool {
+    let eaddr = saddr + PAGE_SIZE;
+
+    (saddr < start && eaddr < start) || (saddr >= end && eaddr >= end)
 }
 
 impl PhysMemIterator {
@@ -87,7 +49,7 @@ impl PhysMemIterator {
         let ent = mm_iter.next().expect("Memory iterator needs at least one value");
 
         PhysMemIterator {
-            current:        Frame::new(ent.base_addr),
+            current:        ent.base_addr,
             mm_iter:        mm_iter,
             mm_start:       ent.base_addr,
             mm_end:         ent.base_addr + ent.length,
@@ -98,41 +60,41 @@ impl PhysMemIterator {
         }
     }
 
-    fn is_valid(&self, frame: &Frame) -> bool {
-        frame.not_contains(self.kern_start, self.kern_end)
-        && frame.not_contains(self.mboot_start, self.mboot_end)
+    fn is_valid(&self, addr: PhysAddr) -> bool {
+        not_contains(addr, self.kern_start, self.kern_end)
+        && not_contains(addr, self.mboot_start, self.mboot_end)
     }
 }
 
 impl Iterator for PhysMemIterator {
-    type Item = Frame;
+    type Item = PhysAddr;
 
-    fn next(&mut self) -> Option<Frame> {
-        let c = self.current.clone();
+    fn next(&mut self) -> Option<PhysAddr> {
+        let c = self.current;
 
-        if c >= Frame::new(self.mm_end) {
+        if c >= self.mm_end {
             if let Some(e) = self.mm_iter.next() {
                 self.mm_start = e.base_addr;
                 self.mm_end = e.base_addr + e.length;
-                self.current = Frame::new(self.mm_start);
+                self.current = self.mm_start;
                 return self.next();
             } else {
                 return None;
             }
         }
 
-        if !self.is_valid(&c) {
-            self.current = self.current.next();
+        if !self.is_valid(c) {
+            self.current = self.current + PAGE_SIZE;
             return self.next();
         }
 
-        self.current = self.current.next();
+        self.current = self.current + PAGE_SIZE;
 
         Some(c)
     }
 }
 
-pub fn allocate() -> Option<Frame> {
+pub fn allocate() -> Option<::mm::frame::Frame> {
     let mut list = PHYS_LIST.lock();
 
     if is_list_addr_valid(list.head) {
@@ -148,13 +110,13 @@ pub fn allocate() -> Option<Frame> {
             list.tail = LIST_ADDR_INVALID;
         }
 
-        return Some(Frame::new(ret));
+        return Some(::mm::frame::Frame::new(ret));
     }
 
     None
 }
 
-pub fn deallocate(frame: Frame) {
+pub fn deallocate(frame: &::mm::frame::Frame) {
     let mut list = PHYS_LIST.lock();
 
     if is_list_addr_valid(list.tail) {
@@ -179,36 +141,32 @@ pub fn init(mm_iter:        MemoryIter,
     println!("Initialising physical memory 0x{:x} 0x{:x} 0x{:x} 0x{:x}",
              kern_start, kern_end, mboot_start, mboot_end);
 
-    let mut prev: Option<Frame> = None;
-    let mut head: Option<Frame> = None;
-    let mut tail: Option<Frame> = None;
+    let mut head: Option<PhysAddr> = None;
+    let mut tail: Option<PhysAddr> = None;
     let mut max_cnt: u64 = 0;
 
     for el in iter {
-        if let Some(p) = prev {
-            let physmap = phys_to_physmap(p.address());
+        if let Some(p) = tail {
+            let physmap = phys_to_physmap(p);
 
             let addr = physmap as *mut PhysAddr;
 
             unsafe {
-                *addr = el.address();
+                *addr = el;
             }
-
-            tail = Some(el.clone());
         }
 
-        if max_cnt == 0 {
-            head = Some(el.clone());
-            println!("head is 0x{:x}", el.address());
+        if head.is_none() {
+            head = Some(el);
+            println!("head is 0x{:x}", el);
         }
 
         max_cnt += 1;
-        prev = Some(el);
+        tail = Some(el);
     }
 
-
-    if let Some(p) = prev {
-        let addr = phys_to_physmap(p.address()) as *mut PhysAddr;
+    if let Some(p) = tail {
+        let addr = phys_to_physmap(p) as *mut PhysAddr;
 
         unsafe {
             *addr = LIST_ADDR_INVALID;
@@ -220,13 +178,13 @@ pub fn init(mm_iter:        MemoryIter,
     let mut l = PHYS_LIST.lock();
 
     if let Some(f) = head {
-        println!("Init head to 0x{:x}", f.address());
-        l.head = f.address();
+        println!("Init head to 0x{:x}", f);
+        l.head = f;
     }
 
     if let Some(f) = tail {
-        println!("Init tail to 0x{:x}", f.address());
-        l.tail = f.address();
+        println!("Init tail to 0x{:x}", f);
+        l.tail = f;
     }
 
     println!("Physical memory initialisation complete after {} iterations", max_cnt);

@@ -17,6 +17,7 @@ extern crate lazy_static;
 mod vga;
 
 pub mod arch;
+pub mod mm;
 
 mod mboot2;
 mod util;
