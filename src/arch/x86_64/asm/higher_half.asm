@@ -18,6 +18,6 @@ higher_half_start:
   ; Jump to rust code
   call x86_64_rust_main
 
-  .loop
+  .loop:
     hlt
     jmp $

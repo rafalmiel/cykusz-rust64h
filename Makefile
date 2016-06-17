@@ -16,8 +16,11 @@ rust_os := target/$(target)/debug/libcykusz_rust64h.a
 all: $(kernel)
 
 clean:
-	rm -r build
 	cargo clean
+	find build -name *.o | xargs rm
+
+purge: clean
+	rm -r build
 
 run: $(iso)
 	qemu-system-x86_64 -drive format=raw,file=$(iso) -no-reboot -m 512

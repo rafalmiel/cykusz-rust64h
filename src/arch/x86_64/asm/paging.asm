@@ -38,7 +38,7 @@ setup_page_tables:
 
 	; Map all P3 table phys tables to 1 GB
 	mov ecx, 0
-.map_p3_table_phys
+.map_p3_table_phys:
 	mov eax, 0x40000000	; 1GB
 	mul ecx
 	or eax, 0b10000011	; Huge table + present + writable
