@@ -1,6 +1,7 @@
 #![feature(lang_items, asm,unique)]
 #![feature(const_fn)]
 #![feature(associated_type_defaults)]
+#![feature(pub_restricted)]
 #![no_std]
 #![allow(dead_code)]
 
@@ -17,7 +18,7 @@ extern crate lazy_static;
 mod vga;
 
 pub mod arch;
-pub mod mm;
+mod mm;
 
 mod mboot2;
 mod util;

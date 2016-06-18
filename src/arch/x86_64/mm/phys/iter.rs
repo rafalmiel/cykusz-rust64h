@@ -16,7 +16,8 @@ pub struct PhysMemIterator {
 fn not_contains(saddr: PhysAddr, start: PhysAddr, end: PhysAddr) -> bool {
     let eaddr = saddr + PAGE_SIZE;
 
-    (saddr < start && eaddr < start) || (saddr >= end && eaddr >= end)
+    (saddr < start && eaddr < start) ||
+    (saddr >= end  && eaddr >= end)
 }
 
 impl PhysMemIterator {
@@ -40,8 +41,8 @@ impl PhysMemIterator {
     }
 
     fn is_valid(&self, addr: PhysAddr) -> bool {
-        not_contains(addr, self.kern_start, self.kern_end)
-        && not_contains(addr, self.mboot_start, self.mboot_end)
+        not_contains(addr, self.kern_start, self.kern_end) &&
+        not_contains(addr, self.mboot_start, self.mboot_end)
     }
 }
 

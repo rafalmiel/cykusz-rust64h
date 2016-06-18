@@ -2,6 +2,7 @@ mod alloc;
 mod iter;
 
 pub use self::alloc::allocate;
+pub use self::alloc::frame::Frame;
 
 use arch::mm::PhysAddr;
 use mboot2::memory::MemoryIter;

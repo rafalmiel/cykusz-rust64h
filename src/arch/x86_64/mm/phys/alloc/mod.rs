@@ -1,3 +1,5 @@
+pub mod frame;
+
 use spin::Mutex;
 
 use arch::mm::PhysAddr;

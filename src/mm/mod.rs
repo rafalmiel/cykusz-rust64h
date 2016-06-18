@@ -1,3 +1,1 @@
-pub mod frame;
-
-pub use self::frame::Frame;
+pub use arch::mm::phys::Frame;

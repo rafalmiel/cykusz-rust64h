@@ -7,7 +7,8 @@ pub struct Frame {
 }
 
 impl Frame {
-    pub fn new(address: PhysAddr) -> Frame {
+    // Restrict new satic method to the phys submodule
+    pub(arch::mm::phys::alloc) fn new(address: PhysAddr) -> Frame {
         Frame {
             number: address / PAGE_SIZE
         }
@@ -28,12 +29,6 @@ impl Frame {
     pub fn next(&self) -> Frame {
         Frame {
             number: self.number + 1
-        }
-    }
-
-    fn clone(&self) -> Frame {
-        Frame {
-            number: self.number
         }
     }
 }

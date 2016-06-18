@@ -2,8 +2,8 @@ pub mod phys;
 
 use mboot2;
 
-pub const VIRT : u64 = 0xFFFFFF0000000000;
-pub const PHYSMAP : u64 = 0xFFFF800000000000;
+const VIRT : u64 = 0xFFFFFF0000000000;
+const PHYSMAP : u64 = 0xFFFF800000000000;
 
 pub fn phys_to_virt(addr: u64) -> u64 {
     if addr < VIRT {
