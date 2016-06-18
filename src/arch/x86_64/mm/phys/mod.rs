@@ -1,0 +1,15 @@
+mod alloc;
+mod iter;
+
+pub use self::alloc::allocate;
+
+use arch::mm::PhysAddr;
+use mboot2::memory::MemoryIter;
+
+pub fn init(mm_iter:        MemoryIter,
+            kern_start:     PhysAddr,
+            kern_end:       PhysAddr,
+            mboot_start:    PhysAddr,
+            mboot_end:      PhysAddr) {
+    alloc::init(mm_iter, kern_start, kern_end, mboot_start, mboot_end);
+}
