@@ -2,7 +2,7 @@ use spin::Mutex;
 
 use arch::mm::PAGE_SIZE;
 use arch::mm::PhysAddr;
-use arch::phys_to_physmap;
+use arch::mm::phys_to_physmap;
 use mboot2::memory::MemoryIter;
 use mm;
 
@@ -93,25 +93,23 @@ impl Iterator for PhysMemIterator {
     }
 }
 
-pub fn allocate() -> Option<mm::frame::Frame> {
+pub fn allocate() -> Option<mm::Frame> {
     let mut list = PHYS_LIST.lock();
 
     if is_list_addr_valid(list.head) {
         let ret = list.head;
 
-        let next_addr = unsafe {
+        list.head = unsafe {
             *(phys_to_physmap(list.head) as *const PhysAddr)
         };
 
-        list.head = next_addr;
-
-        return Some(mm::frame::Frame::new(ret));
+        return Some(mm::Frame::new(ret));
     }
 
     None
 }
 
-fn deallocate(frame: &mm::frame::Frame) {
+fn deallocate(frame: &mm::Frame) {
     println!("Deallocating 0x{:x}", frame.address());
     let mut list = PHYS_LIST.lock();
 
@@ -122,7 +120,7 @@ fn deallocate(frame: &mm::frame::Frame) {
     list.head = frame.address();
 }
 
-impl Drop for mm::frame::Frame {
+impl Drop for mm::Frame {
     fn drop(&mut self) {
         deallocate(self);
     }

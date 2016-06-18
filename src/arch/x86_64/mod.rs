@@ -4,40 +4,7 @@ pub mod mm;
 use vga;
 use mboot2;
 
-pub const VIRT : u64 = 0xFFFFFF0000000000;
-pub const PHYSMAP : u64 = 0xFFFF800000000000;
-
-pub fn phys_to_virt(addr: u64) -> u64 {
-    if addr < VIRT {
-        addr + VIRT
-    } else {
-        addr
-    }
-}
-
-pub fn virt_to_phys(addr: u64) -> u64 {
-    if addr >= VIRT {
-        addr - VIRT
-    } else {
-        addr
-    }
-}
-
-pub fn phys_to_physmap(addr: u64) -> u64 {
-    if addr < PHYSMAP {
-        addr + PHYSMAP
-    } else {
-        addr
-    }
-}
-
-pub fn physmap_to_phys(addr: u64) -> u64 {
-    if addr >= PHYSMAP {
-        addr - PHYSMAP
-    } else {
-        addr
-    }
-}
+use self::mm::phys_to_virt;
 
 #[no_mangle]
 pub extern "C" fn x86_64_rust_main(multiboot_addr: u64) {
