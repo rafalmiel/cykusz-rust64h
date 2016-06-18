@@ -47,11 +47,5 @@ pub extern "C" fn x86_64_rust_main(multiboot_addr: u64) {
 
     mm::init(& mboot_info);
 
-    for _ in 1..10 {
-        if let Some(f) = mm::phys::allocate() {
-            println!("Allocated: 0x{:x}", f.address());
-        }
-    }
-
     ::rust_main();
 }

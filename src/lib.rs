@@ -1,7 +1,6 @@
 #![feature(lang_items, asm,unique)]
 #![feature(const_fn)]
 #![feature(associated_type_defaults)]
-#![feature(pub_restricted)]
 #![no_std]
 #![allow(dead_code)]
 
@@ -26,6 +25,35 @@ mod util;
 #[no_mangle]
 pub extern "C" fn rust_main() {
     println!("In rust main!");
+
+    for _ in 1..10 {
+        let a = arch::mm::phys::allocate();
+        let b = arch::mm::phys::allocate();
+        let c = arch::mm::phys::allocate();
+
+        if let Some(ref f) = a {
+            println!("Allocated: 0x{:x}", f.address());
+        }
+        if let Some(ref f) = b {
+            println!("Allocated: 0x{:x}", f.address());
+        }
+        if let Some(ref f) = c {
+            println!("Allocated: 0x{:x}", f.address());
+        }
+
+        if let Some(f) = arch::mm::phys::allocate() {
+            println!("Allocated: 0x{:x}", f.address());
+        }
+        if let Some(f) = arch::mm::phys::allocate() {
+            println!("Allocated: 0x{:x}", f.address());
+        }
+        if let Some(f) = arch::mm::phys::allocate() {
+            println!("Allocated: 0x{:x}", f.address());
+        }
+        if let Some(f) = arch::mm::phys::allocate() {
+            println!("Allocated: 0x{:x}", f.address());
+        }
+    }
 
     loop {}
 }

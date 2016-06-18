@@ -6,13 +6,6 @@ use arch::phys_to_physmap;
 use mboot2::memory::MemoryIter;
 use mm;
 
-
-impl Drop for ::mm::frame::Frame {
-    fn drop(&mut self) {
-        deallocate(self);
-    }
-}
-
 const LIST_ADDR_INVALID: PhysAddr = 0xFFFF_FFFF_FFFF_FFFF;
 
 const fn is_list_addr_valid(addr: PhysAddr) -> bool {
@@ -21,13 +14,11 @@ const fn is_list_addr_valid(addr: PhysAddr) -> bool {
 
 struct PhysAllocatorList {
     head:           PhysAddr,
-    tail:           PhysAddr
 }
 
 static PHYS_LIST: Mutex<PhysAllocatorList> = Mutex::new(
     PhysAllocatorList {
         head: LIST_ADDR_INVALID,
-        tail: LIST_ADDR_INVALID
     }
 );
 
@@ -108,33 +99,32 @@ pub fn allocate() -> Option<mm::frame::Frame> {
     if is_list_addr_valid(list.head) {
         let ret = list.head;
 
-        if list.head != list.tail {
-            let next_addr = unsafe {
-                *(phys_to_physmap(list.head) as *const PhysAddr)
-            };
-            list.head = next_addr;
-        } else {
-            list.head = LIST_ADDR_INVALID;
-            list.tail = LIST_ADDR_INVALID;
-        }
+        let next_addr = unsafe {
+            *(phys_to_physmap(list.head) as *const PhysAddr)
+        };
 
-        return Some(::mm::frame::Frame::new(ret));
+        list.head = next_addr;
+
+        return Some(mm::frame::Frame::new(ret));
     }
 
     None
 }
 
 fn deallocate(frame: &mm::frame::Frame) {
+    println!("Deallocating 0x{:x}", frame.address());
     let mut list = PHYS_LIST.lock();
 
-    if is_list_addr_valid(list.tail) {
-        unsafe {
-            *(phys_to_physmap(list.tail) as *mut PhysAddr) = frame.address();
-        }
-        list.tail = frame.address();
-    } else {
-        list.head = frame.address();
-        list.tail = frame.address();
+    unsafe {
+        *(phys_to_physmap(frame.address()) as *mut PhysAddr) = list.head;
+    }
+
+    list.head = frame.address();
+}
+
+impl Drop for mm::frame::Frame {
+    fn drop(&mut self) {
+        deallocate(self);
     }
 }
 
@@ -166,7 +156,6 @@ pub fn init(mm_iter:        MemoryIter,
 
         if head.is_none() {
             head = Some(el);
-            println!("head is 0x{:x}", el);
         }
 
         max_cnt += 1;
@@ -178,7 +167,6 @@ pub fn init(mm_iter:        MemoryIter,
 
         unsafe {
             *addr = LIST_ADDR_INVALID;
-            println!("Value at 0x{:x} is 0x{:x}", addr as PhysAddr, *addr);
         }
 
     }
@@ -188,11 +176,6 @@ pub fn init(mm_iter:        MemoryIter,
     if let Some(f) = head {
         println!("Init head to 0x{:x}", f);
         l.head = f;
-    }
-
-    if let Some(f) = tail {
-        println!("Init tail to 0x{:x}", f);
-        l.tail = f;
     }
 
     println!("Physical memory initialisation complete after {} iterations", max_cnt);
