@@ -9,5 +9,6 @@ addons:
 
 script:
   - git clone https://github.com/rust-lang/rust.git
-  - ./update_core_nightly.sh rust
+  - mkdir -p build
+  - rustc --target x86_64-unknown-none-gnu -Z no-landing-pads --out-dir ./build rust/src/libcore/lib.rs
   - make
