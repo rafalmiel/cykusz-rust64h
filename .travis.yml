@@ -1,0 +1,13 @@
+language: rust
+rust:
+  - nightly
+
+addons:
+  apt:
+    packages:
+      - nasm
+
+script:
+  - git clone https://github.com/rust-lang/rust.git
+  - ./update_core_nightly.sh rust
+  - make
