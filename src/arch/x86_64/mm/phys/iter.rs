@@ -29,10 +29,10 @@ impl PhysMemIterator {
         let ent = mm_iter.next().expect("Memory iterator needs at least one value");
 
         PhysMemIterator {
-            current:        ent.base_addr,
+            current:        ent.base_addr as PhysAddr,
             mm_iter:        mm_iter,
-            mm_start:       ent.base_addr,
-            mm_end:         ent.base_addr + ent.length,
+            mm_start:       ent.base_addr as PhysAddr,
+            mm_end:         ent.base_addr as PhysAddr + ent.length as PhysAddr,
             kern_start:     kern_start,
             kern_end:       kern_end,
             mboot_start:    mboot_start,
@@ -54,8 +54,8 @@ impl Iterator for PhysMemIterator {
 
         if c >= self.mm_end {
             if let Some(e) = self.mm_iter.next() {
-                self.mm_start = e.base_addr;
-                self.mm_end = e.base_addr + e.length;
+                self.mm_start = e.base_addr as PhysAddr;
+                self.mm_end = e.base_addr as PhysAddr + e.length as usize;
                 self.current = self.mm_start;
                 return self.next();
             } else {

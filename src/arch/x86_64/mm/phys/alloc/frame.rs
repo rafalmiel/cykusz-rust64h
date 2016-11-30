@@ -3,12 +3,12 @@ use arch::mm::PAGE_SIZE;
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Frame {
-    number:         u64
+    number:         usize
 }
 
 impl Frame {
-    // Restrict new satic method to the phys submodule
-    pub(arch::mm::phys::alloc) fn new(address: PhysAddr) -> Frame {
+    // Restrict new satic method to the mm submodule
+    pub(arch::mm) fn new(address: PhysAddr) -> Frame {
         Frame {
             number: address / PAGE_SIZE
         }
@@ -22,7 +22,7 @@ impl Frame {
         self.number * PAGE_SIZE + PAGE_SIZE
     }
 
-    pub fn number(&self) -> u64 {
+    pub fn number(&self) -> usize {
         self.number
     }
 

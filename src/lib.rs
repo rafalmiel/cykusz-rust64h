@@ -27,7 +27,7 @@ mod util;
 pub extern "C" fn rust_main() {
     println!("In rust main!");
 
-    for _ in 1..10 {
+    for _ in 1..1 {
         let a = arch::mm::phys::allocate();
         let b = arch::mm::phys::allocate();
         let c = arch::mm::phys::allocate();

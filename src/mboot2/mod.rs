@@ -2,6 +2,8 @@ mod tags;
 
 pub use self::tags::*;
 
+use arch::mm::PhysAddr;
+
 #[repr(C)]
 pub struct Info {
     pub size:       u32,
@@ -9,21 +11,21 @@ pub struct Info {
     pub tag:        tags::Tag
 }
 
-pub unsafe fn load(addr: u64) -> &'static Info {
+pub unsafe fn load(addr: PhysAddr) -> &'static Info {
     &*(addr as *const Info)
 }
 
 impl Info {
-    pub fn kernel_start_addr(&self) -> u64 {
+    pub fn kernel_start_addr(&self) -> PhysAddr {
         let item = self.elf_tag().unwrap().sections().nth(0).unwrap();
 
-        item.addr
+        item.addr as PhysAddr
     }
 
-    pub fn kernel_end_addr(&self) -> u64 {
+    pub fn kernel_end_addr(&self) -> PhysAddr {
         let item = self.elf_tag().unwrap().sections().last().unwrap();
 
-        item.addr + item.size
+        item.addr as PhysAddr + item.size as PhysAddr
     }
 
     pub fn tags(&self) -> tags::TagIter {

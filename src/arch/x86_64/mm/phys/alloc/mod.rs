@@ -35,6 +35,10 @@ pub fn allocate() -> Option<mm::Frame> {
             *(phys_to_physmap(list.head) as *const PhysAddr)
         };
 
+        unsafe {
+            *(phys_to_physmap(ret) as *mut PhysAddr) = 0;
+        }
+
         return Some(mm::Frame::new(ret));
     }
 
@@ -52,11 +56,11 @@ fn deallocate(frame: &mm::Frame) {
     list.head = frame.address();
 }
 
-impl Drop for mm::Frame {
-    fn drop(&mut self) {
-        deallocate(self);
-    }
-}
+// impl Drop for mm::Frame {
+//     fn drop(&mut self) {
+//         deallocate(self);
+//     }
+// }
 
 pub fn init(mm_iter:        MemoryIter,
             kern_start:     PhysAddr,

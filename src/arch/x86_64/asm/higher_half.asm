@@ -1,5 +1,5 @@
 extern x86_64_rust_main
-extern p4_table
+extern __p4_table
 
 global higher_half_start
 
@@ -8,8 +8,8 @@ bits 64
 
 higher_half_start:
   ; Unmap lower half
-  mov eax, 0
-  mov [p4_table], eax
+  mov rax, 0
+  mov [__p4_table], rax
 
   ; Reload page table
   mov rax, cr3

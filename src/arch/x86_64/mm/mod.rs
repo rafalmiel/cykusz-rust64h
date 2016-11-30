@@ -1,11 +1,12 @@
 pub mod phys;
+pub mod virt;
 
 use mboot2;
 
-const VIRT : u64 = 0xFFFFFF0000000000;
-const PHYSMAP : u64 = 0xFFFF800000000000;
+const VIRT : VirtAddr = 0xFFFFFF0000000000;
+const PHYSMAP : PhysAddr = 0xFFFF800000000000;
 
-pub fn phys_to_virt(addr: u64) -> u64 {
+pub fn phys_to_virt(addr: VirtAddr) -> VirtAddr {
     if addr < VIRT {
         addr + VIRT
     } else {
@@ -13,7 +14,7 @@ pub fn phys_to_virt(addr: u64) -> u64 {
     }
 }
 
-pub fn virt_to_phys(addr: u64) -> u64 {
+pub fn virt_to_phys(addr: PhysAddr) -> PhysAddr {
     if addr >= VIRT {
         addr - VIRT
     } else {
@@ -21,7 +22,7 @@ pub fn virt_to_phys(addr: u64) -> u64 {
     }
 }
 
-pub fn phys_to_physmap(addr: u64) -> u64 {
+pub fn phys_to_physmap(addr: PhysAddr) -> PhysAddr {
     if addr < PHYSMAP {
         addr + PHYSMAP
     } else {
@@ -29,7 +30,7 @@ pub fn phys_to_physmap(addr: u64) -> u64 {
     }
 }
 
-pub fn physmap_to_phys(addr: u64) -> u64 {
+pub fn physmap_to_phys(addr: PhysAddr) -> PhysAddr {
     if addr >= PHYSMAP {
         addr - PHYSMAP
     } else {
@@ -37,8 +38,9 @@ pub fn physmap_to_phys(addr: u64) -> u64 {
     }
 }
 
-pub type PhysAddr = u64;
-pub type VirtAddr = u64;
+pub type PhysAddr = usize;
+pub type VirtAddr = usize;
+
 pub const PAGE_SIZE: PhysAddr = 4096;
 
 pub fn init(mboot_info: & mboot2::Info) {
@@ -63,11 +65,13 @@ pub fn init(mboot_info: & mboot2::Info) {
     println!("Kernel end  : 0x{:x}", virt_to_phys(mboot_info.kernel_end_addr()));
 
     println!("mboot2 start: 0x{:x}", virt_to_phys(multiboot_addr));
-    println!("mboot2 end  : 0x{:x}", virt_to_phys(multiboot_addr + mboot_info.size as u64));
+    println!("mboot2 end  : 0x{:x}", virt_to_phys(multiboot_addr as PhysAddr + mboot_info.size as PhysAddr));
 
     phys::init(mem.entries(),
                virt_to_phys(mboot_info.kernel_start_addr()),
                virt_to_phys(mboot_info.kernel_end_addr()),
                virt_to_phys(multiboot_addr),
-               virt_to_phys(multiboot_addr + mboot_info.size as u64));
+               virt_to_phys(multiboot_addr as PhysAddr + mboot_info.size as PhysAddr));
+
+    virt::init();
 }
