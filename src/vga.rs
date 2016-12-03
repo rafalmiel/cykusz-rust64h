@@ -2,6 +2,7 @@ use core::ptr::Unique;
 use spin::Mutex;
 
 use arch::cpuio::Port;
+use arch::mm::PhysAddr;
 
 use arch::mm::phys_to_virt;
 
@@ -55,6 +56,7 @@ struct ScreenChar {
 
 const BUFFER_HEIGHT: usize = 25;
 const BUFFER_WIDTH: usize = 80;
+const VGA_BUFFER: PhysAddr = 0xb8000;
 
 static CURSOR_INDEX: Mutex<Port<u8>> = Mutex::new(unsafe { Port::new(0x3D4) });
 
@@ -65,7 +67,7 @@ lazy_static! {
         column: 0,
         row: 0,
         color: ColorCode::new(Color::LightGreen, Color::Black),
-        buffer: unsafe { Unique::new((phys_to_virt(0xb8000)) as *mut _) },
+        buffer: unsafe { Unique::new((phys_to_virt(VGA_BUFFER)) as *mut _) },
     });
 }
 

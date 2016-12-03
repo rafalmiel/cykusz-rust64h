@@ -17,6 +17,12 @@ bitflags! {
 }
 
 impl Entry {
+    pub fn new_empty() -> Entry {
+        Entry {
+            bits: 0
+        }
+    }
+
     pub unsafe fn from_addr(addr: PhysAddr) -> Entry {
         println!("Dereferencing value at 0x{:x}", addr as *const PhysAddr as u64);
         Entry {
@@ -53,7 +59,7 @@ impl Entry {
         self.insert(flags);
     }
 
-    pub fn set_frame(&mut self, frame: Frame) {
+    pub fn set_frame(&mut self, frame: &Frame) {
         self.bits = frame.address();
     }
 

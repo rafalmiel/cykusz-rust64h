@@ -58,12 +58,6 @@ fn deallocate(frame: &mm::Frame) {
     list.head = frame.address();
 }
 
-// impl Drop for mm::Frame {
-//     fn drop(&mut self) {
-//         deallocate(self);
-//     }
-// }
-
 pub fn init(mm_iter:        MemoryIter,
             kern_start:     PhysAddr,
             kern_end:       PhysAddr,

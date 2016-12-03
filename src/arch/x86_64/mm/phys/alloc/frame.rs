@@ -1,13 +1,15 @@
 use arch::mm::PhysAddr;
 use arch::mm::PAGE_SIZE;
 
+use arch::mm::phys_to_physmap;
+
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Frame {
     number:         usize
 }
 
 impl Frame {
-    // Restrict new satic method to the mm submodule
+    // Restrict new static method to the mm submodule
     pub(arch::mm) fn new(address: PhysAddr) -> Frame {
         Frame {
             number: address / PAGE_SIZE
@@ -16,6 +18,10 @@ impl Frame {
 
     pub fn address(&self) -> PhysAddr {
         self.number * PAGE_SIZE
+    }
+
+    pub fn address_mapped(&self) -> PhysAddr {
+        phys_to_physmap(self.address())
     }
 
     pub fn end_address(&self) -> PhysAddr {
