@@ -1,0 +1,9 @@
+[package]
+authors = ["Rafal Mielniczuk <rafal.mielniczuk2@gmail.com>"]
+name = "bump_allocator"
+version = "0.1.0"
+
+[dependencies]
+spin = "0.4.5"
+
+[workspace]

@@ -25,7 +25,7 @@ impl Entry {
     }
 
     pub unsafe fn from_addr(addr: MappedAddr) -> Entry {
-        println!("Dereferencing value at 0x{:x}", addr);
+        //println!("Dereferencing value at 0x{:x}", addr);
         Entry {
             bits: *(addr as *const MappedAddr)
         }

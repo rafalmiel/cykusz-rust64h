@@ -59,7 +59,7 @@ impl Table {
 
             entry.clear();
 
-            println!("Unmapped index {}", idx);
+            //println!("Unmapped index {}", idx);
         }
     }
 
@@ -76,7 +76,7 @@ impl Table {
 
         entry.set_flags(entry::PRESENT | entry::WRITABLE);
 
-        println!("Writing entry at idx {} -> 0x{:x}", idx, entry.raw());
+        //println!("Writing entry at idx {} -> 0x{:x}", idx, entry.raw());
 
         Table::new_at_frame_mut(&Frame::new(entry.address()))
     }

@@ -60,10 +60,12 @@ pub fn map_to(virt: VirtAddr, phys: PhysAddr) {
 pub fn init() {
     println!("p4 addr: 0x{:x}", p4_table_addr());
 
-    map(0x325000);
+    //init heap
+    let mut addr = 0xfffff80000000000;
 
-    unsafe {
-        asm!("xchg %bx, %bx");
-        *(0x325000 as *mut u64) = 33;
-    };
+    for _ in 0..25 {
+        map(addr);
+
+        addr += 4096;
+    }
 }

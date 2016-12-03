@@ -4,6 +4,12 @@
 #![feature(pub_restricted)]
 #![no_std]
 #![allow(dead_code)]
+#![feature(alloc, collections)]
+
+extern crate bump_allocator;
+extern crate alloc;
+#[macro_use]
+extern crate collections;
 
 extern crate rlibc;
 extern crate spin;
@@ -24,37 +30,52 @@ mod mboot2;
 mod util;
 
 #[no_mangle]
+pub extern "C" fn notify_alloc(addr: *const u8) {
+    println!("Calling from allocator! 0x{:x}", addr as usize);
+}
+
+#[no_mangle]
 pub extern "C" fn rust_main() {
     println!("In rust main!");
 
-    for _ in 1..1 {
-        let a = arch::mm::phys::allocate();
-        let b = arch::mm::phys::allocate();
-        let c = arch::mm::phys::allocate();
+    // for _ in 1..1 {
+    //     let a = arch::mm::phys::allocate();
+    //     let b = arch::mm::phys::allocate();
+    //     let c = arch::mm::phys::allocate();
+    //
+    //     if let Some(ref f) = a {
+    //         println!("Allocated: 0x{:x}", f.address());
+    //     }
+    //     if let Some(ref f) = b {
+    //         println!("Allocated: 0x{:x}", f.address());
+    //     }
+    //     if let Some(ref f) = c {
+    //         println!("Allocated: 0x{:x}", f.address());
+    //     }
+    //
+    //     if let Some(f) = arch::mm::phys::allocate() {
+    //         println!("Allocated: 0x{:x}", f.address());
+    //     }
+    //     if let Some(f) = arch::mm::phys::allocate() {
+    //         println!("Allocated: 0x{:x}", f.address());
+    //     }
+    //     if let Some(f) = arch::mm::phys::allocate() {
+    //         println!("Allocated: 0x{:x}", f.address());
+    //     }
+    //     if let Some(f) = arch::mm::phys::allocate() {
+    //         println!("Allocated: 0x{:x}", f.address());
+    //     }
+    // }
 
-        if let Some(ref f) = a {
-            println!("Allocated: 0x{:x}", f.address());
-        }
-        if let Some(ref f) = b {
-            println!("Allocated: 0x{:x}", f.address());
-        }
-        if let Some(ref f) = c {
-            println!("Allocated: 0x{:x}", f.address());
-        }
+    use alloc::boxed::Box;
+    let mut heap_test = Box::new(42);
 
-        if let Some(f) = arch::mm::phys::allocate() {
-            println!("Allocated: 0x{:x}", f.address());
-        }
-        if let Some(f) = arch::mm::phys::allocate() {
-            println!("Allocated: 0x{:x}", f.address());
-        }
-        if let Some(f) = arch::mm::phys::allocate() {
-            println!("Allocated: 0x{:x}", f.address());
-        }
-        if let Some(f) = arch::mm::phys::allocate() {
-            println!("Allocated: 0x{:x}", f.address());
-        }
-    }
+    Box::new(42);
+    Box::new(42);
+
+    *heap_test = 33;
+
+    println!("Allocated on heap!");
 
     loop {}
 }

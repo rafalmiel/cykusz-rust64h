@@ -3,6 +3,7 @@ name = "cykusz_rust64h"
 version = "0.1.0"
 dependencies = [
  "bitflags 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bump_allocator 0.1.0",
  "lazy_static 0.2.2 (git+https://github.com/rust-lang-nursery/lazy-static.rs.git)",
  "rlibc 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "spin 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -13,6 +14,13 @@ dependencies = [
 name = "bitflags"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "bump_allocator"
+version = "0.1.0"
+dependencies = [
+ "spin 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "byteorder"

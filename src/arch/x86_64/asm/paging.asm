@@ -5,6 +5,10 @@ global __p4_table
 section .text
 bits 32
 
+; kernel phys mem start 0xffff800000000000
+; kernel code mem start 0xffffff0000000000
+; kernel heap mem start 0xfffff80000000000
+
 setup_page_tables:
 	; map first P4 entry to P3 table
 	mov eax, __p3_table
