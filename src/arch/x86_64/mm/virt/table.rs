@@ -30,7 +30,7 @@ impl Table {
     pub fn next_level_mut(&mut self, idx: usize) -> Option<&mut Table> {
         let entry = &self.entries[idx];
 
-        if entry.is_unused() {
+        if !entry.contains(entry::PRESENT) {
             return None
         }
 
@@ -40,7 +40,7 @@ impl Table {
     pub fn alloc(&mut self, idx: usize) {
         let entry = &mut self.entries[idx];
 
-        if entry.is_unused() {
+        if !entry.contains(entry::PRESENT) {
             let frame = ::arch::mm::phys::allocate().expect("Out of memory!");
 
             Table::new_at_frame_mut(&frame).clear();

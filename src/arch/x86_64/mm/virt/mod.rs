@@ -43,13 +43,13 @@ pub fn unmap(virt: VirtAddr) {
         .and_then(|t| t.next_level_mut(page.p2_index()))) {
 
         p1.unmap(page.p1_index());
+
+        unsafe {
+            ::x86::tlb::flush_all();
+        };
     } else {
         println!("ERROR: virt addr 0x{:x} cannot be unmapped", virt);
     }
-
-    unsafe {
-        ::x86::tlb::flush_all();
-    };
 }
 
 #[allow(unused)]
