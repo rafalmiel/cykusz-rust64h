@@ -18,22 +18,38 @@ pub fn map(virt: VirtAddr) {
     let page = page::Page::new(virt);
     let p4_addr = physmap_to_phys(p4_table_addr());
 
-    Table::new_at_frame(
+    Table::new_at_frame_mut(
         &Frame::new(p4_addr)
     )
-        .next_level(page.p4_index())
-        .next_level(page.p3_index())
-        .next_level(page.p2_index())
-        .next_level(page.p1_index());
+        .alloc_next_level(page.p4_index())
+        .alloc_next_level(page.p3_index())
+        .alloc_next_level(page.p2_index())
+        .alloc(page.p1_index());
 
     unsafe {
         ::x86::tlb::flush(p4_addr);
     }
 }
 
-#[allow(unused)]
 pub fn unmap(virt: VirtAddr) {
+    let page = page::Page::new(virt);
+    let p4_addr = physmap_to_phys(p4_table_addr());
 
+    if let Some(p1) = Table::new_at_frame_mut(
+        &Frame::new(p4_addr)
+    )
+        .next_level_mut(page.p4_index())
+        .and_then(|t| t.next_level_mut(page.p3_index())
+        .and_then(|t| t.next_level_mut(page.p2_index()))) {
+
+        p1.unmap(page.p1_index());
+    } else {
+        println!("ERROR: virt addr 0x{:x} cannot be unmapped", virt);
+    }
+
+    unsafe {
+        ::x86::tlb::flush_all();
+    };
 }
 
 #[allow(unused)]
@@ -49,5 +65,5 @@ pub fn init() {
     unsafe {
         asm!("xchg %bx, %bx");
         *(0x325000 as *mut u64) = 33;
-    }
+    };
 }

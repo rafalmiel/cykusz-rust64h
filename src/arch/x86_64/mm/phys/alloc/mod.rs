@@ -42,7 +42,7 @@ pub fn allocate() -> Option<mm::Frame> {
     None
 }
 
-fn deallocate(frame: &mm::Frame) {
+pub fn deallocate(frame: &mm::Frame) {
     println!("Deallocating 0x{:x}", frame.address());
     let mut list = PHYS_LIST.lock();
 
