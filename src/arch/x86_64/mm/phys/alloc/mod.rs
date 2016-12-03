@@ -36,12 +36,6 @@ pub fn allocate() -> Option<mm::Frame> {
             *(phys_to_physmap(list.head) as *const PhysAddr)
         };
 
-        unsafe {
-            for i in 0..(4096 / 8) {
-                *(phys_to_physmap(ret + i*8) as *mut PhysAddr) = 0;
-            }
-        }
-
         return Some(mm::Frame::new(ret));
     }
 

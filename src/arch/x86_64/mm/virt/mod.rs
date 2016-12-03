@@ -16,10 +16,10 @@ fn p4_table_addr() -> MappedAddr {
 
 pub fn map(virt: VirtAddr) {
     let page = page::Page::new(virt);
-    let p4_addr = p4_table_addr();
+    let p4_addr = physmap_to_phys(p4_table_addr());
 
-    Table::new_from_frame(
-        Frame::new(p4_addr)
+    Table::new_at_frame(
+        &Frame::new(p4_addr)
     )
         .next_level(page.p4_index())
         .next_level(page.p3_index())

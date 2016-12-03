@@ -2,50 +2,40 @@ use arch::mm::virt::entry::Entry;
 use arch::mm::virt::entry;
 use arch::mm::phys::Frame;
 
-use arch::mm::PhysAddr;
-
-const ENTRIES_COUNT: usize = 4096;
+const ENTRIES_COUNT: usize = 512;
 
 pub struct Table {
-    frame: Frame,
+    entries: [Entry; ENTRIES_COUNT]
 }
 
 impl Table {
-    pub fn new_from_frame(frame: Frame) -> Table {
-        Table {
-            frame: frame,
-        }
-    }
-
-    fn entry_at(&self, idx: usize) -> Entry {
+    pub fn new_at_frame<'a>(frame: &Frame) -> &'a mut Table {
         unsafe {
-            Entry::from_addr(self.frame.address_mapped() + idx * 8)
+            &mut *(frame.address_mapped() as *mut Table)
         }
     }
 
-    fn entry_write(&self, idx: usize, entry: &Entry) {
-        assert!(idx < ENTRIES_COUNT, "Entry index out of bound");
-
-        unsafe {
-            *((self.frame.address_mapped() + idx * 8) as *mut PhysAddr) = entry.raw();
+    pub fn clear(&mut self) {
+        for i in 0..ENTRIES_COUNT {
+            self.entries[i].clear();
         }
     }
 
-    pub fn next_level(&self, idx: usize) -> Table {
-        let mut entry = self.entry_at(idx);
+    pub fn next_level(&mut self, idx: usize) -> &mut Table {
+        let entry = &mut self.entries[idx];
 
         if entry.is_unused() {
             let frame = ::arch::mm::phys::allocate().expect("Out of memory!");
+
+            Table::new_at_frame(&frame).clear();
 
             entry.set_frame(&frame);
         }
 
         entry.set_flags(entry::PRESENT | entry::WRITABLE);
 
-        self.entry_write(idx, &entry);
-
         println!("Writing entry at idx {} -> 0x{:x}", idx, entry.raw());
 
-        Table::new_from_frame(Frame::new(entry.address()))
+        Table::new_at_frame(&Frame::new(entry.address()))
     }
 }
