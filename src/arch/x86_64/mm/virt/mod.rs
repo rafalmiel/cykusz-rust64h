@@ -8,7 +8,7 @@ use self::table::Table;
 
 const PAGE_SIZE: usize = 4096;
 
-fn p4_table_addr() -> PhysAddr {
+fn p4_table_addr() -> MappedAddr {
     unsafe {
         phys_to_physmap(::x86::controlregs::cr3() as PhysAddr)
     }

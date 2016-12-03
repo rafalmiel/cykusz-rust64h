@@ -1,4 +1,5 @@
 use arch::mm::PhysAddr;
+use arch::mm::MappedAddr;
 use arch::mm::PAGE_SIZE;
 
 use arch::mm::phys_to_physmap;
@@ -20,7 +21,7 @@ impl Frame {
         self.number * PAGE_SIZE
     }
 
-    pub fn address_mapped(&self) -> PhysAddr {
+    pub fn address_mapped(&self) -> MappedAddr {
         phys_to_physmap(self.address())
     }
 

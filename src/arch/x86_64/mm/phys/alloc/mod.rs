@@ -3,6 +3,7 @@ pub mod frame;
 use spin::Mutex;
 
 use arch::mm::PhysAddr;
+use arch::mm::MappedAddr;
 use arch::mm::phys_to_physmap;
 use mboot2::memory::MemoryIter;
 use mm;
@@ -52,7 +53,7 @@ fn deallocate(frame: &mm::Frame) {
     let mut list = PHYS_LIST.lock();
 
     unsafe {
-        *(phys_to_physmap(frame.address()) as *mut PhysAddr) = list.head;
+        *(frame.address_mapped() as *mut MappedAddr) = list.head;
     }
 
     list.head = frame.address();
@@ -77,7 +78,7 @@ pub fn init(mm_iter:        MemoryIter,
         if let Some(p) = tail {
             let physmap = phys_to_physmap(p);
 
-            let addr = physmap as *mut PhysAddr;
+            let addr = physmap as *mut MappedAddr;
 
             unsafe {
                 *addr = el;
@@ -93,7 +94,7 @@ pub fn init(mm_iter:        MemoryIter,
     }
 
     if let Some(p) = tail {
-        let addr = phys_to_physmap(p) as *mut PhysAddr;
+        let addr = phys_to_physmap(p) as *mut MappedAddr;
 
         unsafe {
             *addr = LIST_ADDR_INVALID;

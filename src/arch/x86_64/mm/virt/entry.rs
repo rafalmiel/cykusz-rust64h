@@ -1,4 +1,5 @@
 use arch::mm::phys::Frame;
+use arch::mm::MappedAddr;
 use arch::mm::PhysAddr;
 
 bitflags! {
@@ -23,10 +24,10 @@ impl Entry {
         }
     }
 
-    pub unsafe fn from_addr(addr: PhysAddr) -> Entry {
-        println!("Dereferencing value at 0x{:x}", addr as *const PhysAddr as u64);
+    pub unsafe fn from_addr(addr: MappedAddr) -> Entry {
+        println!("Dereferencing value at 0x{:x}", addr);
         Entry {
-            bits: *(addr as *const PhysAddr)
+            bits: *(addr as *const MappedAddr)
         }
     }
 
@@ -48,7 +49,7 @@ impl Entry {
 
     pub fn frame(&self) -> Option<Frame> {
         if self.contains(PRESENT) {
-            Some(Frame::new(self.bits as PhysAddr & 0x000fffff_fffff000))
+            Some(Frame::new(self.address()))
         } else {
             None
         }

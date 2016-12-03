@@ -6,7 +6,7 @@ use mboot2;
 const VIRT : VirtAddr = 0xFFFFFF0000000000;
 const PHYSMAP : PhysAddr = 0xFFFF800000000000;
 
-pub fn phys_to_virt(addr: VirtAddr) -> VirtAddr {
+pub fn phys_to_virt(addr: PhysAddr) -> VirtAddr {
     if addr < VIRT {
         addr + VIRT
     } else {
@@ -14,7 +14,7 @@ pub fn phys_to_virt(addr: VirtAddr) -> VirtAddr {
     }
 }
 
-pub fn virt_to_phys(addr: PhysAddr) -> PhysAddr {
+pub fn virt_to_phys(addr: VirtAddr) -> PhysAddr {
     if addr >= VIRT {
         addr - VIRT
     } else {
@@ -22,7 +22,7 @@ pub fn virt_to_phys(addr: PhysAddr) -> PhysAddr {
     }
 }
 
-pub fn phys_to_physmap(addr: PhysAddr) -> PhysAddr {
+pub fn phys_to_physmap(addr: PhysAddr) -> MappedAddr {
     if addr < PHYSMAP {
         addr + PHYSMAP
     } else {
@@ -30,7 +30,7 @@ pub fn phys_to_physmap(addr: PhysAddr) -> PhysAddr {
     }
 }
 
-pub fn physmap_to_phys(addr: PhysAddr) -> PhysAddr {
+pub fn physmap_to_phys(addr: MappedAddr) -> PhysAddr {
     if addr >= PHYSMAP {
         addr - PHYSMAP
     } else {
@@ -39,6 +39,7 @@ pub fn physmap_to_phys(addr: PhysAddr) -> PhysAddr {
 }
 
 pub type PhysAddr = usize;
+pub type MappedAddr = usize;
 pub type VirtAddr = usize;
 
 pub const PAGE_SIZE: PhysAddr = 4096;
