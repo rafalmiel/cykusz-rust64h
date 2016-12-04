@@ -35,7 +35,11 @@ pub extern "C" fn notify_alloc(addr: *const u8) {
 }
 
 #[no_mangle]
-pub extern "C" fn rust_main() {
+pub extern "C" fn notify_dealloc(addr: *const u8) {
+    println!("Calling from deallocator! 0x{:x}", addr as usize);
+}
+
+pub fn rust_main() {
     println!("In rust main!");
 
     // for _ in 1..1 {
@@ -67,13 +71,22 @@ pub extern "C" fn rust_main() {
     //     }
     // }
 
-    use alloc::boxed::Box;
-    let mut heap_test = Box::new(42);
+    {
+        use alloc::boxed::Box;
+        let mut heap_test = Box::new(42);
 
-    Box::new(42);
-    Box::new(42);
+        Box::new(42);
 
-    *heap_test = 33;
+        let a = vec![1,2,3];
+
+        for i in a {
+            print!("{} ", i);
+        }
+
+        Box::new(42);
+
+        *heap_test = 33;
+    }
 
     println!("Allocated on heap!");
 

@@ -16,6 +16,7 @@ static BUMP_ALLOCATOR: Mutex<BumpAllocator> = Mutex::new(
 
 extern {
     fn notify_alloc(addr: *const u8);
+    fn notify_dealloc(addr: *const u8);
 }
 
 #[derive(Debug)]
@@ -79,6 +80,7 @@ pub extern fn __rust_allocate(size: usize, align: usize) -> *mut u8 {
 pub extern fn __rust_deallocate(_ptr: *mut u8, _size: usize,
     _align: usize)
 {
+    unsafe {notify_dealloc(_ptr as *const u8) };
     // just leak it
 }
 
