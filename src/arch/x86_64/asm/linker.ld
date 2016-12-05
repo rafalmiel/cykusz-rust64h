@@ -20,7 +20,6 @@ SECTIONS {
 
 	.text(0xFFFFFF0000000000 + __kernel_text_start) : AT(__kernel_text_start)
 	{
-		build/arch/x86_64/asm/higher_half.o(.text* .rodata* .data* .bss*)
     *(.rodata .rodata.*)
 		*(.text .text.*)
 	}

@@ -25,8 +25,6 @@ higher_half_start:
   mov rax, cr3
   mov cr3, rax
 
-  xchg bx, bx
-
   ; Jump to rust code
   call x86_64_rust_main
 

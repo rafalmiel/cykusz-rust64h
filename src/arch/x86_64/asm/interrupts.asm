@@ -31,7 +31,6 @@ bits 64
 %macro ISR_NOERRCODE 1
 	[global isr%1]
 	isr%1:
-    xchg bx, bx
 		push 0		; dummy error code
 		push %1		; interrupt number
 		jmp isr_common
@@ -40,7 +39,6 @@ bits 64
 %macro ISR_ERRCODE 1
 	[global isr%1]
 	isr%1:
-    xchg bx, bx
 		push %1		; interrupt number
 		jmp isr_common
 %endmacro
@@ -78,8 +76,6 @@ isr_common:
         pushAll
 
         mov rdi, rsp            ; Pass pointer to interrupt data.
-
-        xchg bx, bx
 
         call isr_handler
 
