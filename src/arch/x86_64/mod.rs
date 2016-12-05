@@ -1,5 +1,6 @@
 pub mod cpuio;
 pub mod mm;
+pub mod int;
 
 use vga;
 use mboot2;
@@ -15,6 +16,7 @@ pub extern "C" fn x86_64_rust_main(multiboot_addr: PhysAddr) {
     let mboot_info = unsafe { mboot2::load(phys_to_virt(multiboot_addr)) };
 
     mm::init(& mboot_info);
+    int::init();
 
     ::rust_main();
 }
