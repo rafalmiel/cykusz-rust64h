@@ -4,7 +4,7 @@
 #![feature(pub_restricted)]
 #![no_std]
 #![allow(dead_code)]
-#![feature(alloc, collections)]
+#![feature(alloc, collections, step_by)]
 
 extern crate bump_allocator;
 extern crate alloc;
