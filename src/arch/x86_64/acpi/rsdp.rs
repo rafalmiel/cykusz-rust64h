@@ -16,6 +16,7 @@ impl Rsdp {
         if &self.signature as &[u8] != b"RSD PTR " {
             false
         } else {
+            println!("SizeOf rsdp {}", size_of::<Rsdp>());
             acpi::util::checksum(self as *const _ as *const u8, size_of::<Rsdp>() as isize)
         }
     }
