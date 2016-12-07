@@ -96,10 +96,6 @@ impl Rsdt {
                         let ioapic = &*(a as *const MATDEntryIOApic);
                         self.ioapic_address = Some(ioapic.ioapic_address as PhysAddr);
                     },
-                    MATD_ENTRY_INT_SRC_OVERRIDE => {
-                        let int = &*(a as *const MATDEntryIntSrc);
-                        println!("int override {} -> {}", int.irq_src, int.global_sys_int);
-                    },
                     _ => {}
                 }
 
@@ -110,6 +106,33 @@ impl Rsdt {
 
 
         }
+    }
+
+    pub fn remap_irq(&self, irq: u32) -> Option<u32> {
+        self.matd.and_then(|matd| {
+            unsafe {
+                let mut a = (matd as *const _ as *const u8).offset(size_of::<MATDHeader>() as isize);
+                let limit: *const u8 = (a).offset(matd.rsdt.length as isize);
+
+                while a < limit {
+                    let entry = &*(a as *const MATDEntry);
+
+                    match entry.typ {
+                        MATD_ENTRY_INT_SRC_OVERRIDE => {
+                            let isrc = &*(a as *const MATDEntryIntSrc);
+                            if isrc.irq_src as u32 == irq {
+                                return Some(isrc.global_sys_int);
+                            }
+                        },
+                        _ => {}
+                    }
+
+                    a = a.offset(entry.length as isize);
+                }
+
+                Some(irq)
+            }
+        })
     }
 
     pub fn local_controller_address(&self) -> Option<MappedAddr> {
