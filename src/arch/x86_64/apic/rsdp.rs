@@ -1,6 +1,6 @@
 use core::mem::size_of;
 
-use arch::acpi;
+use arch::apic;
 
 #[repr(packed, C)]
 pub struct Rsdp {
@@ -17,7 +17,7 @@ impl Rsdp {
             false
         } else {
             println!("SizeOf rsdp {}", size_of::<Rsdp>());
-            acpi::util::checksum(self as *const _ as *const u8, size_of::<Rsdp>() as isize)
+            apic::util::checksum(self as *const _ as *const u8, size_of::<Rsdp>() as isize)
         }
     }
 

@@ -4,8 +4,8 @@ mod util;
 
 use spin::Mutex;
 
-use arch::acpi::rsdp::Rsdp;
-use arch::acpi::rsdt::Rsdt;
+use arch::apic::rsdp::Rsdp;
+use arch::apic::rsdt::Rsdt;
 use arch::mm::PhysAddr;
 
 pub struct Acpi {
