@@ -147,10 +147,10 @@ impl Rsdt {
         })
     }
 
-    pub fn init(&mut self, rsdt_address: PhysAddr) {
+    pub fn init(&mut self, rsdt_address: MappedAddr) {
         use super::util::checksum;
         unsafe {
-            let rsdt_header = &*(phys_to_physmap(rsdt_address) as *const RSDTHeader);
+            let rsdt_header = &*(rsdt_address as *const RSDTHeader);
 
             println!("{} {}",
                 &rsdt_header.signature == b"RSDT",
