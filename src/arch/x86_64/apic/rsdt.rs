@@ -90,11 +90,21 @@ impl Rsdt {
                 //println!("Entry type {}, len: {}", entry.typ, entry.length);
 
                 match entry.typ {
+                    MATD_ENTRY_PROC_LOCAL_APIC => {
+                        println!("FOUND LOCALAPIC!");
+
+                        let localapic = &*(a as *const MATDEntryLocalApic);
+                        println!("procid {}", localapic.proc_id);
+                        println!("apicid {}", localapic.apic_id);
+                        println!("flags 0x{:x}", localapic.flags);
+                    },
                     MATD_ENTRY_PROC_IOAPIC => {
                         println!("FOUND IOAPIC!");
 
                         let ioapic = &*(a as *const MATDEntryIOApic);
                         self.ioapic_address = Some(ioapic.ioapic_address as PhysAddr);
+
+                        println!("IOApic address: 0x{:x}", self.ioapic_address.unwrap());
                     },
                     _ => {}
                 }
