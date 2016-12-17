@@ -58,8 +58,6 @@ pub fn map_to(virt: VirtAddr, phys: PhysAddr) {
 }
 
 pub fn init() {
-    println!("p4 addr: 0x{:x}", p4_table_addr());
-
     //init heap
     let mut addr = 0xfffff80000000000;
 

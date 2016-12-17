@@ -76,34 +76,28 @@ impl Rsdt {
 
     fn parse_matd(&mut self, matd_header: &'static MATDHeader) {
         self.matd = Some(matd_header);
-        println!("local ctrl addr 0x{:x}, len: {}",
-            self.local_controller_address().unwrap(),
-            matd_header.rsdt.length);
 
         unsafe {
             let mut a = matd_header as *const _ as *const u8;
-            let limit: *const u8 = (a).offset(matd_header.rsdt.length as isize);
-            a = (matd_header as *const _ as *const u8).offset(size_of::<MATDHeader>() as isize);
+            let limit: *const u8 = a.offset(matd_header.rsdt.length as isize);
+            a = a.offset(size_of::<MATDHeader>() as isize);
 
             while a < limit {
                 let entry = &*(a as *const MATDEntry);
 
                 match entry.typ {
                     MATD_ENTRY_PROC_LOCAL_APIC => {
-                        println!("FOUND LOCALAPIC!");
+
 
                         let localapic = &*(a as *const MATDEntryLocalApic);
-                        println!("procid {}", localapic.proc_id);
-                        println!("apicid {}", localapic.apic_id);
-                        println!("flags 0x{:x}", localapic.flags);
+                        println!("Local apic: procid: {}, apicid: {}, flags: 0x{:x}",
+                            localapic.proc_id, localapic.apic_id, localapic.flags);
                     },
                     MATD_ENTRY_PROC_IOAPIC => {
-                        println!("FOUND IOAPIC!");
-
                         let ioapic = &*(a as *const MATDEntryIOApic);
                         self.ioapic_address = Some(ioapic.ioapic_address as PhysAddr);
 
-                        println!("IOApic address: 0x{:x}", self.ioapic_address.unwrap());
+                        println!("IOApic: address: 0x{:x}", self.ioapic_address.unwrap());
                     },
                     _ => {}
                 }
@@ -117,8 +111,8 @@ impl Rsdt {
         self.matd.and_then(|matd| {
             unsafe {
                 let mut a = matd as *const _ as *const u8;
-                let limit: *const u8 = (a).offset(matd.rsdt.length as isize);
-                a = (matd as *const _ as *const u8).offset(size_of::<MATDHeader>() as isize);
+                let limit: *const u8 = a.offset(matd.rsdt.length as isize);
+                a = a.offset(size_of::<MATDHeader>() as isize);
 
                 while a < limit {
                     let entry = &*(a as *const MATDEntry);
@@ -158,18 +152,11 @@ impl Rsdt {
         unsafe {
             let rsdt_header = &*(rsdt_address as *const RSDTHeader);
 
-            println!("{} {}",
-                &rsdt_header.signature == b"RSDT",
-                checksum(rsdt_header as *const _ as *const u8, rsdt_header.length as isize));
-
             if &rsdt_header.signature == b"RSDT"
                && checksum(rsdt_header as *const _ as *const u8,
                            rsdt_header.length as isize) {
-                println!("RSDT Header length: {}, sizeof: {}", rsdt_header.length, size_of::<RSDTHeader>());
 
                 let entries = (rsdt_header.length - size_of::<RSDTHeader>() as u32) / 4;
-
-                println!("Entries: {}", entries);
 
                 for i in 0..entries {
                     let entry = *((rsdt_header as *const _ as usize
@@ -177,13 +164,9 @@ impl Rsdt {
 
                     let hdr = &*(phys_to_physmap(entry as PhysAddr) as *const RSDTHeader);
 
-                    println!("LEN: {}", hdr.length);
-
                     if &hdr.signature == b"APIC"
                        && checksum(hdr as *const _ as *const u8, hdr.length as isize) {
-                        println!("Found APIC");
                         self.parse_matd(&*(hdr as *const _ as *const MATDHeader));
-                        println!("IOAPIC addr: 0x{:x}", self.ioapic_address().unwrap());
                     }
                 }
             }

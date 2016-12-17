@@ -31,8 +31,6 @@ impl Acpi {
             self.rsdp = Rsdp::find();
 
             if let Some(r) = self.rsdp {
-                println!("Found RSDT address! 0x{:x}", r.rsdt_address);
-
                 self.rsdt.init(phys_to_physmap(r.rsdt_address as PhysAddr));
 
                 if let Some(lapic_base) = self.rsdt.local_controller_address() {
@@ -41,10 +39,9 @@ impl Acpi {
 
                     if let Some(ioapic_base) = self.rsdt.ioapic_address() {
                         self.ioapic.init(ioapic_base);
-                        println!("IOApic initialised!");
-
-                        println!("IOAPIC ID: {} IDENT: {}", self.ioapic.id(), self.ioapic.identification());
-                        println!("IOAPIC ENTRIES: {} VERSION: {}", self.ioapic.max_red_entries(), self.ioapic.version());
+                        println!("IOApic initialised! id: {}, ident: {}, entries: {}, version: {}",
+                            self.ioapic.id(), self.ioapic.identification(),
+                            self.ioapic.max_red_entries(), self.ioapic.version());
                     }
                 }
             }

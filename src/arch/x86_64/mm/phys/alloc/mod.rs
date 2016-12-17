@@ -99,7 +99,6 @@ pub fn init(mm_iter:        MemoryIter,
     let mut l = PHYS_LIST.lock();
 
     if let Some(f) = head {
-        println!("Init head to 0x{:x}", f);
         l.head = f;
     }
 

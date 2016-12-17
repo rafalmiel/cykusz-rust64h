@@ -55,11 +55,6 @@ impl Idt {
         self.pointer.setup_table(&self.table);
         self.setup_gates();
 
-        println!("pointer limit: {}", self.pointer.limit);
-        println!("pointer base: 0x{:x}", self.pointer.base);
-        println!("pointer itself 0x{:x}", (&self.pointer as *const _ as u64));
-
-
         unsafe {
             x86::dtables::lidt(&self.pointer);
         }
