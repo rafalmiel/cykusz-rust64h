@@ -41,7 +41,7 @@ impl Acpi {
                         self.ioapic.init(ioapic_base);
                         println!("IOApic initialised! id: {}, ident: {}, entries: {}, version: {}",
                             self.ioapic.id(), self.ioapic.identification(),
-                            self.ioapic.max_red_entries(), self.ioapic.version());
+                            self.ioapic.max_red_entry() + 1, self.ioapic.version());
                     }
                 }
             }

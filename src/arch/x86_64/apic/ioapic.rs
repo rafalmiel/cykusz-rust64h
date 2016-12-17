@@ -116,7 +116,7 @@ impl IOApic {
         RegId(self.read(REG_ARB)).id()
     }
 
-    pub fn max_red_entries(&self) -> u32 {
+    pub fn max_red_entry(&self) -> u32 {
         RegVer(self.read(REG_VER)).max_red_entry()
     }
 
@@ -154,7 +154,7 @@ impl IOApic {
     pub fn init(&mut self, base: MappedAddr) {
         self.ioapic_base = Some(base);
 
-        for i in 0..self.max_red_entries() {
+        for i in 0..self.max_red_entry() + 1 {
             self.mask_interrupt(i, true);
         }
     }
