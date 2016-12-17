@@ -81,13 +81,12 @@ impl Rsdt {
             matd_header.rsdt.length);
 
         unsafe {
-            let mut a = (matd_header as *const _ as *const u8).offset(size_of::<MATDHeader>() as isize);
+            let mut a = matd_header as *const _ as *const u8;
             let limit: *const u8 = (a).offset(matd_header.rsdt.length as isize);
+            a = (matd_header as *const _ as *const u8).offset(size_of::<MATDHeader>() as isize);
 
             while a < limit {
                 let entry = &*(a as *const MATDEntry);
-
-                //println!("Entry type {}, len: {}", entry.typ, entry.length);
 
                 match entry.typ {
                     MATD_ENTRY_PROC_LOCAL_APIC => {
@@ -111,18 +110,15 @@ impl Rsdt {
 
                 a = a.offset(entry.length as isize);
             }
-
-            println!("start: 0x{:x} end: 0x{:x}", matd_header as *const _ as usize, limit as usize);
-
-
         }
     }
 
     pub fn remap_irq(&self, irq: u32) -> Option<u32> {
         self.matd.and_then(|matd| {
             unsafe {
-                let mut a = (matd as *const _ as *const u8).offset(size_of::<MATDHeader>() as isize);
+                let mut a = matd as *const _ as *const u8;
                 let limit: *const u8 = (a).offset(matd.rsdt.length as isize);
+                a = (matd as *const _ as *const u8).offset(size_of::<MATDHeader>() as isize);
 
                 while a < limit {
                     let entry = &*(a as *const MATDEntry);
