@@ -58,3 +58,23 @@ pub fn init() {
     println!("Initializing acpi");
     ACPI.lock().init();
 }
+
+pub fn end_of_interrupt() {
+    ACPI.lock().lapic.end_of_interrupt();
+}
+
+pub fn mask_interrupt(i: u32, mask: bool) {
+    ACPI.lock().ioapic.mask_interrupt(i, mask);
+}
+
+pub fn set_int(i: u32, idt_idx: u32) {
+    ACPI.lock().ioapic.set_int(i, idt_idx);
+}
+
+pub fn remap_irq(irq: u32) -> u32 {
+    if let Some(i) = ACPI.lock().rsdt.remap_irq(irq) {
+        return i;
+    } else {
+        panic!("Failed to remap irq!");
+    }
+}

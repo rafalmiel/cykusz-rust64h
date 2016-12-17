@@ -91,9 +91,9 @@ pub unsafe fn test() {
 }
 
 pub unsafe fn enable() {
-    x86::irq::disable();
+    x86::irq::enable();
 }
 
 pub unsafe fn disable() {
-    x86::irq::enable();
+    x86::irq::disable();
 }
