@@ -98,8 +98,9 @@ pub fn rust_main() {
 extern "C" fn eh_personality() {}
 
 #[cfg(not(test))]
+#[no_mangle]
 #[lang = "panic_fmt"]
-extern "C" fn panic_fmt(fmt: core::fmt::Arguments, file: &str, line: u32) -> ! {
+pub extern "C" fn panic_fmt(fmt: core::fmt::Arguments, file: &str, line: u32) -> ! {
     println!("\n\nPANIC in {} at line {}:", file, line);
     println!("    {}", fmt);
 
