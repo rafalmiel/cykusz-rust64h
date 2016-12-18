@@ -22,5 +22,7 @@ pub extern "C" fn x86_64_rust_main(multiboot_addr: PhysAddr) {
 
     unsafe {int::idt::test()};
 
+    apic::fire_timer();
+
     ::rust_main();
 }

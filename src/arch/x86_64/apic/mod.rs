@@ -68,6 +68,10 @@ pub fn set_int(i: u32, idt_idx: u32) {
     ACPI.lock().ioapic.set_int(i, idt_idx);
 }
 
+pub fn fire_timer() {
+    ACPI.lock().lapic.fire_timer();
+}
+
 pub fn remap_irq(irq: u32) -> u32 {
     if let Some(i) = ACPI.lock().rsdt.remap_irq(irq) {
         return i;
