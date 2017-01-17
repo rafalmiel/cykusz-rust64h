@@ -23,23 +23,62 @@ extern crate lazy_static;
 
 pub const HEAP_START: usize = 0xfffff80000000000;
 pub const HEAP_SIZE: usize = 25 * 4096; // 100 KiB / 25 pages
+pub const HEAP_MAX_SIZE: usize = 4096 * 4096; // 4MB
 
 lazy_static! {
     static ref HEAP: Mutex<Heap> = Mutex::new(unsafe {
-        Heap::new(HEAP_START, HEAP_SIZE)
+        Heap::new(HEAP_START, HEAP_SIZE, HEAP_MAX_SIZE)
     });
 }
 
+/// Align downwards. Returns the greatest x with alignment `align`
+/// so that x <= addr. The alignment must be a power of 2.
+pub fn align_down(addr: usize, align: usize) -> usize {
+    if align.is_power_of_two() {
+        addr & !(align - 1)
+    } else if align == 0 {
+        addr
+    } else {
+        panic!("`align` must be a power of 2");
+    }
+}
+
+/// Align upwards. Returns the smallest x with alignment `align`
+/// so that x >= addr. The alignment must be a power of 2.
+pub fn align_up(addr: usize, align: usize) -> usize {
+    align_down(addr + align - 1, align)
+}
+
 extern {
+    #[allow(dead_code)]
     fn notify_alloc(addr: *const u8);
     fn notify_dealloc(addr: *const u8);
+    fn request_more_mem(from: *const u8, size: usize);
 }
 
 #[no_mangle]
 pub extern fn __rust_allocate(size: usize, align: usize) -> *mut u8 {
-    let a = HEAP.lock().allocate_first_fit(size, align).expect("out of memory");
-    unsafe { notify_alloc(a as *const u8) };
-    a
+    let mut heap = HEAP.lock();
+    let a = heap.allocate_first_fit(size, align);
+
+    if let Some(addr) = a {
+        return addr;
+    } else {
+        let top = heap.top();
+        let req = align_up(size, 0x1000);
+
+        if top + req > heap.max_top() {
+            panic!("Out of mem!");
+        }
+
+        unsafe {
+            request_more_mem(top as *const u8, req);
+        }
+
+        heap.extend_last_hole(req);
+
+        return __rust_allocate(size, align);
+    }
 }
 
 #[no_mangle]

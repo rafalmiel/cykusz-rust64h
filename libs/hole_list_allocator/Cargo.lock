@@ -3,7 +3,7 @@ name = "hole_list_allocator"
 version = "0.1.0"
 dependencies = [
  "lazy_static 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "linked_list_allocator 0.2.3 (git+https://github.com/rafalmiel/linked-list-allocator.git)",
+ "linked_list_allocator 0.2.3",
  "spin 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -18,7 +18,6 @@ dependencies = [
 [[package]]
 name = "linked_list_allocator"
 version = "0.2.3"
-source = "git+https://github.com/rafalmiel/linked-list-allocator.git#84f29a9d92afaeb5b50c76ff8438dca9f2999fd7"
 
 [[package]]
 name = "spin"
@@ -27,5 +26,4 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [metadata]
 "checksum lazy_static 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "6abe0ee2e758cd6bc8a2cd56726359007748fbf4128da998b65d0b70f881e19b"
-"checksum linked_list_allocator 0.2.3 (git+https://github.com/rafalmiel/linked-list-allocator.git)" = "<none>"
 "checksum spin 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)" = "1d16a26e2b789f86aabddbe91cb82ee2e822beb8a59840d631941b625ef77e53"

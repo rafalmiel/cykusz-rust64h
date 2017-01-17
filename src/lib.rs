@@ -39,6 +39,19 @@ pub extern "C" fn notify_dealloc(addr: *const u8) {
     println!("Calling from deallocator! 0x{:x}", addr as usize);
 }
 
+#[no_mangle]
+pub extern "C" fn request_more_mem(from: *const u8, size: usize) {
+    let mut from = from as usize;
+    let to = from + size;
+
+    while from < to {
+        arch::mm::virt::map(from);
+
+        from += arch::mm::PAGE_SIZE;
+    }
+
+}
+
 pub fn rust_main() {
     println!("In rust main!");
 
