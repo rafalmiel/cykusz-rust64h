@@ -16,10 +16,12 @@ higher_half_start:
   lgdt [rax]
 
   ; update selectors
-  mov ax, gdt64_data_hh
+  mov ax, 0
   mov ss, ax
   mov ds, ax
   mov es, ax
+  mov fs, ax
+  mov gs, ax
 
   ; Reload page table
   mov rax, cr3
@@ -38,8 +40,6 @@ gdt64_hh:
 	dq 0								; zero entry
 gdt64_code_hh: equ $ - gdt64_hh
 	dq (1 << 44) | (1 << 47) | (1 << 41) | (1 << 43) | (1 << 53)	; code segment
-gdt64_data_hh: equ $ - gdt64_hh
-	dq (1 << 44) | (1 << 47) | (1 << 41) 				; data segment
 gdt64_pointer_hh:
 	dw $ - gdt64_hh - 1
 	dq gdt64_hh
