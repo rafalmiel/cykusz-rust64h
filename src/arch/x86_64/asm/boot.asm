@@ -30,12 +30,6 @@ start:
 
 	lgdt [gdt64_pointer]
 
-	; update selectors
-	mov ax, gdt64_data
-	mov ss, ax
-	mov ds, ax
-	mov es, ax
-
 	jmp gdt64_code:long_mode_start
 
 error:
