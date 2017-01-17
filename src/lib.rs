@@ -41,15 +41,9 @@ pub extern "C" fn notify_dealloc(addr: *const u8) {
 
 #[no_mangle]
 pub extern "C" fn request_more_mem(from: *const u8, size: usize) {
-    let mut from = from as usize;
-    let to = from + size;
-
-    while from < to {
-        arch::mm::virt::map(from);
-
-        from += arch::mm::PAGE_SIZE;
+    for addr in (from as usize..from as usize + size).step_by(arch::mm::PAGE_SIZE) {
+        arch::mm::virt::map(addr);
     }
-
 }
 
 pub fn rust_main() {
