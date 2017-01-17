@@ -6,7 +6,7 @@
 #![allow(dead_code)]
 #![feature(alloc, collections, step_by)]
 
-extern crate bump_allocator;
+extern crate hole_list_allocator;
 extern crate alloc;
 #[macro_use]
 extern crate collections;
@@ -71,24 +71,24 @@ pub fn rust_main() {
     //     }
     // }
 
-    // {
-    //     use alloc::boxed::Box;
-    //     let mut heap_test = Box::new(42);
-    //
-    //     Box::new(42);
-    //
-    //     let a = vec![1,2,3];
-    //
-    //     for i in a {
-    //         print!("{} ", i);
-    //     }
-    //
-    //     Box::new(42);
-    //
-    //     *heap_test = 33;
-    // }
-    //
-    // println!("Allocated on heap!");
+    {
+        use alloc::boxed::Box;
+        let mut heap_test = Box::new(42);
+
+        Box::new(42);
+
+        let a = vec![1,2,3];
+
+        for i in a {
+            print!("{} ", i);
+        }
+
+        Box::new(42);
+
+        *heap_test = 33;
+    }
+
+    println!("Allocated on heap!");
 
     loop {}
 }
