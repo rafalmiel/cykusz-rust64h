@@ -7,7 +7,7 @@ version = "0.1.0"
 spin = "*"
 
 [dependencies.linked_list_allocator]
-git = "https://github.com/rafalmiel/linked-list-allocator.git"
+path = "../linked-list-allocator"
 
 [dependencies.lazy_static]
 version = "*"
