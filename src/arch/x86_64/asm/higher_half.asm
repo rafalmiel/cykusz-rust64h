@@ -34,14 +34,14 @@ higher_half_start:
   hlt
   jmp $
 
-; We need to make gdt writable, because bochs will page fault when setting
-; access bit in code segment after remapping the kernel
-section .data
+; We set 40th access bit on so that bochs will not try to write to readonly page
+; causing segfault
+section .rodata
 bits 64
 gdt64_hh:
-	dq 0								; zero entry
+	dq 0                                                          ; zero entry
 gdt64_code_hh: equ $ - gdt64_hh
-	dq (1 << 44) | (1 << 47) | (1 << 43) | (1 << 53)	; code segment
+	dq (1 << 44) | (1 << 47) | (1 << 43) | (1 << 40) | (1 << 53)  ; code segment
 gdt64_pointer_hh:
 	dw $ - gdt64_hh - 1
 	dq gdt64_hh
