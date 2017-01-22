@@ -25,6 +25,12 @@ pub struct InterruptContext {
     _pad2: u32,
 }
 
+pub fn disable_pic() {
+    unsafe {
+        PICS.lock().disable();
+    }
+}
+
 #[no_mangle]
 pub extern "C" fn isr_handler(ctx: &InterruptContext) {
     match ctx.int_id {

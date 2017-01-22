@@ -20,8 +20,15 @@ SECTIONS {
 
 	.text(0xFFFFFF0000000000 + __kernel_text_start) : AT(__kernel_text_start)
 	{
-    *(.rodata .rodata.*)
 		*(.text .text.*)
+	}
+
+	. = ALIGN(4K) - 0xFFFFFF0000000000;
+	__kernel_rodata_start = .;
+
+	.rodata(0xFFFFFF0000000000 + __kernel_rodata_start) : AT(__kernel_rodata_start)
+	{
+		*(.rodata.*)
 	}
 
 	. = ALIGN(4K) - 0xFFFFFF0000000000;
@@ -30,7 +37,6 @@ SECTIONS {
 	.gcc_except_table(0xFFFFFF0000000000 + __kernel_gccexc_start) : AT(__kernel_gccexc_start)
 	{
 		*(.gcc_except_table .gcc_except_table.*)
-		. = ALIGN(4K);
 	}
 
 	. = ALIGN(4K) - 0xFFFFFF0000000000;
@@ -40,7 +46,6 @@ SECTIONS {
 	{
 		*(.data .data.*)
 		*(.stack .stack.*)
-		. = ALIGN(4K);
 	}
 
 	. = ALIGN(4K) - 0xFFFFFF0000000000;

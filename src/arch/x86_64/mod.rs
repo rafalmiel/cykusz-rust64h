@@ -19,10 +19,11 @@ pub extern "C" fn x86_64_rust_main(multiboot_addr: PhysAddr) {
     let mboot_info = unsafe { mboot2::load(phys_to_physmap(multiboot_addr)) };
 
     mm::init(&mboot_info);
-    int::init();
-    apic::init();
 
-    unsafe {asm!("xchg %bx, %bx");}
+    int::init();
+    int::disable_pic();
+
+    apic::init();
 
     unsafe {int::idt::test()};
 

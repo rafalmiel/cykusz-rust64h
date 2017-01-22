@@ -93,7 +93,6 @@ impl ChainedPics {
 
     pub unsafe fn init(&mut self) {
         self.configure();
-        self.disable();
     }
 
     fn handles_interrupt(&self, interrupt_id: u8) -> bool {

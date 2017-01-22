@@ -96,6 +96,12 @@ fn enable_nxe_bit() {
     }
 }
 
+fn enable_write_protect_bit() {
+    use x86::controlregs::{cr0, cr0_write};
+
+    unsafe { cr0_write(cr0() | (1 << 16)) };
+}
+
 fn remap(mboot_info: &mboot2::Info) {
     let frame = ::arch::mm::phys::allocate().expect("Out of mem!");
     let table = Table::new_at_frame_mut(&frame);
@@ -121,9 +127,6 @@ fn remap(mboot_info: &mboot2::Info) {
             flags.insert(entry::NO_EXECUTE);
         }
 
-        //FIXME: workaround bochs page fault on the interrupt
-        flags.insert(entry::WRITABLE);
-
         println!("from 0x{:x} to 0x{:x} with flags 0x{:x}", s, e, flags.raw());
 
         for addr in (s..e).step_by(PAGE_SIZE) {
@@ -148,6 +151,7 @@ fn remap(mboot_info: &mboot2::Info) {
         println!("Writing cr3 with value 0x{:x}", frame.address());
 
         enable_nxe_bit();
+        enable_write_protect_bit();
 
         ::x86::controlregs::cr3_write(frame.address() as u64);
 

@@ -34,12 +34,14 @@ higher_half_start:
   hlt
   jmp $
 
-section .rodata
+; We need to make gdt writable, because bochs will page fault when setting
+; access bit in code segment after remapping the kernel
+section .data
 bits 64
 gdt64_hh:
 	dq 0								; zero entry
 gdt64_code_hh: equ $ - gdt64_hh
-	dq (1 << 44) | (1 << 47) | (1 << 41) | (1 << 43) | (1 << 53)	; code segment
+	dq (1 << 44) | (1 << 47) | (1 << 43) | (1 << 53)	; code segment
 gdt64_pointer_hh:
 	dw $ - gdt64_hh - 1
 	dq gdt64_hh
