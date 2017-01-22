@@ -24,7 +24,7 @@ impl Iterator for TagIter {
             tag => {
                 self.current =
                     util::align(
-                        self.current as u64 + tag.size as u64, 8
+                        self.current as usize + tag.size as usize, 8
                     ) as *const _;
 
                 Some(tag)

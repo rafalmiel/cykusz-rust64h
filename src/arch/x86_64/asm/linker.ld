@@ -25,11 +25,21 @@ SECTIONS {
 	}
 
 	. = ALIGN(4K) - 0xFFFFFF0000000000;
+	__kernel_gccexc_start = .;
+
+	.gcc_except_table(0xFFFFFF0000000000 + __kernel_gccexc_start) : AT(__kernel_gccexc_start)
+	{
+		*(.gcc_except_table .gcc_except_table.*)
+		. = ALIGN(4K);
+	}
+
+	. = ALIGN(4K) - 0xFFFFFF0000000000;
 	__kernel_data_start = .;
 
 	.data(0xFFFFFF0000000000 + __kernel_data_start) : AT(__kernel_data_start)
 	{
 		*(.data .data.*)
+		*(.stack .stack.*)
 		. = ALIGN(4K);
 	}
 

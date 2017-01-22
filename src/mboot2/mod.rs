@@ -1,7 +1,8 @@
-mod tags;
+pub mod tags;
 
 pub use self::tags::*;
 
+use arch::mm::MappedAddr;
 use arch::mm::PhysAddr;
 
 #[repr(C)]
@@ -11,7 +12,7 @@ pub struct Info {
     pub tag:        tags::Tag
 }
 
-pub unsafe fn load(addr: PhysAddr) -> &'static Info {
+pub unsafe fn load(addr: MappedAddr) -> &'static Info {
     &*(addr as *const Info)
 }
 

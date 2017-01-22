@@ -41,5 +41,5 @@ error:
 
 section .bss
 boot_stack_bottom:
-	resb 4096
+	resb 4096*16
 boot_stack_top:

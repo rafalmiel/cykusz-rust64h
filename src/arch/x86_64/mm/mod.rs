@@ -44,9 +44,10 @@ pub type VirtAddr = usize;
 
 pub const PAGE_SIZE: PhysAddr = 4096;
 
-pub fn init(mboot_info: & mboot2::Info) {
-    let mem = mboot_info.memory_map_tag().unwrap();
-    let multiboot_addr = mboot_info as *const _ as PhysAddr;
+pub fn init(mboot_info: &mboot2::Info) {
+
+    let mem = mboot_info.memory_map_tag().expect("Memory map tag not found");
+    let multiboot_addr = mboot_info as *const _ as MappedAddr;
 
     for tag in mboot_info.tags() {
         println!("tag type: {}, size: {}", tag.typ, tag.size);
@@ -65,14 +66,14 @@ pub fn init(mboot_info: & mboot2::Info) {
     println!("Kernel start: 0x{:x}", virt_to_phys(mboot_info.kernel_start_addr()));
     println!("Kernel end  : 0x{:x}", virt_to_phys(mboot_info.kernel_end_addr()));
 
-    println!("mboot2 start: 0x{:x}", virt_to_phys(multiboot_addr));
-    println!("mboot2 end  : 0x{:x}", virt_to_phys(multiboot_addr as PhysAddr + mboot_info.size as PhysAddr));
+    println!("mboot2 start: 0x{:x}", physmap_to_phys(multiboot_addr));
+    println!("mboot2 end  : 0x{:x}", physmap_to_phys(multiboot_addr as PhysAddr + mboot_info.size as PhysAddr));
 
     phys::init(mem.entries(),
                virt_to_phys(mboot_info.kernel_start_addr()),
                virt_to_phys(mboot_info.kernel_end_addr()),
-               virt_to_phys(multiboot_addr),
-               virt_to_phys(multiboot_addr as PhysAddr + mboot_info.size as PhysAddr));
+               physmap_to_phys(multiboot_addr),
+               physmap_to_phys(multiboot_addr as PhysAddr + mboot_info.size as PhysAddr));
 
-    virt::init();
+    virt::init(&mboot_info);
 }

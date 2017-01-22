@@ -8,17 +8,21 @@ use mboot2;
 
 use arch::mm::PhysAddr;
 
-use self::mm::phys_to_virt;
+use self::mm::phys_to_physmap;
 
 #[no_mangle]
 pub extern "C" fn x86_64_rust_main(multiboot_addr: PhysAddr) {
     vga::clear_screen();
 
-    let mboot_info = unsafe { mboot2::load(phys_to_virt(multiboot_addr)) };
+    println!("Loading mboot at addr 0x{:x}", phys_to_physmap(multiboot_addr));
 
-    mm::init(& mboot_info);
+    let mboot_info = unsafe { mboot2::load(phys_to_physmap(multiboot_addr)) };
+
+    mm::init(&mboot_info);
     int::init();
     apic::init();
+
+    unsafe {asm!("xchg %bx, %bx");}
 
     unsafe {int::idt::test()};
 

@@ -31,6 +31,7 @@ bits 64
 %macro ISR_NOERRCODE 1
 	[global isr%1]
 	isr%1:
+    xchg bx, bx
 		push 0		; dummy error code
 		push %1		; interrupt number
 		jmp isr_common
@@ -39,6 +40,7 @@ bits 64
 %macro ISR_ERRCODE 1
 	[global isr%1]
 	isr%1:
+    xchg bx, bx
 		push %1		; interrupt number
 		jmp isr_common
 %endmacro
@@ -83,9 +85,6 @@ isr_common:
         add rsp, 16             ; Remove err code & interrupt ID.
         iretq
 
-        section .rodata
-
-section .data
 interrupt_handlers:
         dq isr0
         dq isr1

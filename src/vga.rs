@@ -4,7 +4,7 @@ use spin::Mutex;
 use arch::cpuio::Port;
 use arch::mm::PhysAddr;
 
-use arch::mm::phys_to_virt;
+use arch::mm::phys_to_physmap;
 
 macro_rules! println {
     ($fmt:expr) => (print!(concat!($fmt, "\n")));
@@ -67,7 +67,7 @@ lazy_static! {
         column: 0,
         row: 0,
         color: ColorCode::new(Color::LightGreen, Color::Black),
-        buffer: unsafe { Unique::new((phys_to_virt(VGA_BUFFER)) as *mut _) },
+        buffer: unsafe { Unique::new((phys_to_physmap(VGA_BUFFER)) as *mut _) },
     });
 }
 

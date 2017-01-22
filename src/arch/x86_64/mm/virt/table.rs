@@ -49,6 +49,30 @@ impl Table {
         }
     }
 
+    pub fn set(&mut self, idx: usize, frame: &Frame) {
+        let entry = &mut self.entries[idx];
+
+        if !entry.contains(entry::PRESENT) {
+            entry.set(&frame, entry::PRESENT | entry::WRITABLE);
+        }
+    }
+
+    pub fn set_flags(&mut self, idx: usize, frame: &Frame, flags: entry::Entry) {
+        let entry = &mut self.entries[idx];
+
+        if !entry.contains(entry::PRESENT) {
+            entry.set(&frame, flags);
+        }
+    }
+
+    pub fn set_hugepage(&mut self, idx: usize, frame: &Frame) {
+        let entry = &mut self.entries[idx];
+
+        if !entry.contains(entry::PRESENT) {
+            entry.set(&frame, entry::PRESENT | entry::WRITABLE | entry::HUGE_PAGE);
+        }
+    }
+
     pub fn unmap(&mut self, idx: usize) {
         let entry = &mut self.entries[idx];
 
@@ -58,8 +82,6 @@ impl Table {
             ::arch::mm::phys::deallocate(&frame);
 
             entry.clear();
-
-            //println!("Unmapped index {}", idx);
         }
     }
 
@@ -75,8 +97,6 @@ impl Table {
         }
 
         entry.set_flags(entry::PRESENT | entry::WRITABLE);
-
-        //println!("Writing entry at idx {} -> 0x{:x}", idx, entry.raw());
 
         Table::new_at_frame_mut(&Frame::new(entry.address()))
     }

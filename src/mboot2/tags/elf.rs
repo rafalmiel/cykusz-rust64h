@@ -61,6 +61,16 @@ impl Elf {
     }
 }
 
+impl ElfSection {
+    pub fn address(&self) -> u64 {
+        self.addr
+    }
+
+    pub fn end_address(&self) -> u64 {
+        self.addr + self.size
+    }
+}
+
 impl Iterator for ElfSectionIter {
     type Item = &'static ElfSection;
 

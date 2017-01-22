@@ -17,6 +17,14 @@ impl Frame {
         }
     }
 
+    pub fn clear(&mut self) {
+        for a in (self.address_mapped()..self.address_mapped() + PAGE_SIZE).step_by(8) {
+            unsafe {
+                *(a as *mut u64) = 0;
+            }
+        }
+    }
+
     pub fn address(&self) -> PhysAddr {
         self.number * PAGE_SIZE
     }
