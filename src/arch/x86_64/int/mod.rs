@@ -1,12 +1,12 @@
-mod pic;
 pub mod idt;
 
 use spin::Mutex;
-use arch::apic;
+use arch::pic;
+use arch::apic::Acpi;
 
 static PICS: Mutex<pic::ChainedPics> = Mutex::new(unsafe { pic::ChainedPics::new(0x20, 0x28) });
-
-static mut IDT: Mutex<idt::Idt> = Mutex::new(idt::Idt::new());
+static ACPI: Mutex<Acpi> = Mutex::new(Acpi::new());
+static IDT: Mutex<idt::Idt> = Mutex::new(idt::Idt::new());
 
 #[repr(C, packed)]
 pub struct InterruptContext {
@@ -31,6 +31,35 @@ pub fn disable_pic() {
     }
 }
 
+pub fn end_of_interrupt() {
+    ACPI.lock().lapic.end_of_interrupt();
+}
+
+pub fn mask_interrupt(i: u32, mask: bool) {
+    ACPI.lock().ioapic.mask_interrupt(i, mask);
+}
+
+pub fn set_int(i: u32, idt_idx: u32) {
+    ACPI.lock().ioapic.set_int(i, idt_idx);
+}
+
+pub fn fire_timer() {
+    ACPI.lock().lapic.fire_timer();
+}
+
+pub fn remap_irq(irq: u32) -> u32 {
+    if let Some(i) = ACPI.lock().rsdt.remap_irq(irq) {
+        return i;
+    } else {
+        panic!("Failed to remap irq!");
+    }
+}
+
+pub fn init_acpi() {
+    println!("Initializing acpi");
+    ACPI.lock().init();
+}
+
 #[no_mangle]
 pub extern "C" fn isr_handler(ctx: &InterruptContext) {
     match ctx.int_id {
@@ -47,14 +76,21 @@ pub extern "C" fn isr_handler(ctx: &InterruptContext) {
         }
     }
 
-    apic::end_of_interrupt();
+    end_of_interrupt();
 }
 
 pub fn init() {
-    unsafe {
-        IDT.lock().init();
-        PICS.lock().init();
+    IDT.lock().init();
 
+    unsafe {
+        PICS.lock().init();
+    }
+
+    disable_pic();
+
+    init_acpi();
+
+    unsafe {
         idt::enable();
     }
 }

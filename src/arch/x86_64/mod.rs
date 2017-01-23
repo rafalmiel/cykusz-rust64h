@@ -2,6 +2,7 @@ pub mod cpuio;
 pub mod mm;
 pub mod int;
 pub mod apic;
+pub mod pic;
 
 use vga;
 use mboot2;
@@ -21,15 +22,12 @@ pub extern "C" fn x86_64_rust_main(multiboot_addr: PhysAddr) {
     mm::init(&mboot_info);
 
     int::init();
-    int::disable_pic();
-
-    apic::init();
 
     unsafe {
         int::idt::test() ;
     }
 
-    //apic::fire_timer();
+    int::fire_timer();
 
     ::rust_main();
 }
