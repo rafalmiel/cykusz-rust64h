@@ -7,7 +7,7 @@ dependencies = [
  "lazy_static 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "rlibc 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "spin 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "x86 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "x86 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -123,34 +123,37 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "phf"
-version = "0.7.20"
+version = "0.7.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "phf_shared 0.7.20 (registry+https://github.com/rust-lang/crates.io-index)",
+ "phf_shared 0.7.21 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "phf_codegen"
-version = "0.7.20"
+version = "0.7.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "phf_generator 0.7.20 (registry+https://github.com/rust-lang/crates.io-index)",
- "phf_shared 0.7.20 (registry+https://github.com/rust-lang/crates.io-index)",
+ "phf_generator 0.7.21 (registry+https://github.com/rust-lang/crates.io-index)",
+ "phf_shared 0.7.21 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "phf_generator"
-version = "0.7.20"
+version = "0.7.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "phf_shared 0.7.20 (registry+https://github.com/rust-lang/crates.io-index)",
+ "phf_shared 0.7.21 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.3.15 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "phf_shared"
-version = "0.7.20"
+version = "0.7.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "siphasher 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "rand"
@@ -193,18 +196,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "siphasher"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
 name = "spin"
 version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "x86"
-version = "0.7.2"
+version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
+ "bitflags 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "csv 0.14.7 (registry+https://github.com/rust-lang/crates.io-index)",
- "phf 0.7.20 (registry+https://github.com/rust-lang/crates.io-index)",
- "phf_codegen 0.7.20 (registry+https://github.com/rust-lang/crates.io-index)",
+ "phf 0.7.21 (registry+https://github.com/rust-lang/crates.io-index)",
+ "phf_codegen 0.7.21 (registry+https://github.com/rust-lang/crates.io-index)",
  "raw-cpuid 2.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -222,15 +231,16 @@ dependencies = [
 "checksum num-iter 0.1.32 (registry+https://github.com/rust-lang/crates.io-index)" = "287a1c9969a847055e1122ec0ea7a5c5d6f72aad97934e131c83d5c08ab4e45c"
 "checksum num-rational 0.1.35 (registry+https://github.com/rust-lang/crates.io-index)" = "54ff603b8334a72fbb27fe66948aac0abaaa40231b3cecd189e76162f6f38aaf"
 "checksum num-traits 0.1.36 (registry+https://github.com/rust-lang/crates.io-index)" = "a16a42856a256b39c6d3484f097f6713e14feacd9bfb02290917904fae46c81c"
-"checksum phf 0.7.20 (registry+https://github.com/rust-lang/crates.io-index)" = "0c6afb2057bb5f846a7b75703f90bc1cef4970c35209f712925db7768e999202"
-"checksum phf_codegen 0.7.20 (registry+https://github.com/rust-lang/crates.io-index)" = "6b63f121bf9a128f2172a65d8313a8e0e79d63874eeb4b4b7d82e6dda6b62f7c"
-"checksum phf_generator 0.7.20 (registry+https://github.com/rust-lang/crates.io-index)" = "50ffbd7970f75afa083c5dd7b6830c97b72b81579c7a92d8134ef2ee6c0c7eb0"
-"checksum phf_shared 0.7.20 (registry+https://github.com/rust-lang/crates.io-index)" = "286385a0e50d4147bce15b2c19f0cf84c395b0e061aaf840898a7bf664c2cfb7"
+"checksum phf 0.7.21 (registry+https://github.com/rust-lang/crates.io-index)" = "cb325642290f28ee14d8c6201159949a872f220c62af6e110a56ea914fbe42fc"
+"checksum phf_codegen 0.7.21 (registry+https://github.com/rust-lang/crates.io-index)" = "d62594c0bb54c464f633175d502038177e90309daf2e0158be42ed5f023ce88f"
+"checksum phf_generator 0.7.21 (registry+https://github.com/rust-lang/crates.io-index)" = "6b07ffcc532ccc85e3afc45865469bf5d9e4ef5bfcf9622e3cfe80c2d275ec03"
+"checksum phf_shared 0.7.21 (registry+https://github.com/rust-lang/crates.io-index)" = "07e24b0ca9643bdecd0632f2b3da6b1b89bbb0030e0b992afc1113b23a7bc2f2"
 "checksum rand 0.3.15 (registry+https://github.com/rust-lang/crates.io-index)" = "022e0636ec2519ddae48154b028864bdce4eaf7d35226ab8e65c611be97b189d"
 "checksum raw-cpuid 2.0.1 (registry+https://github.com/rust-lang/crates.io-index)" = "7bc8e963398e6244e1d51c42dd68394f273d39ed8afc9238b74f56041b23dbd3"
 "checksum rlibc 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "fc874b127765f014d792f16763a81245ab80500e2ad921ed4ee9e82481ee08fe"
 "checksum rustc-serialize 0.3.22 (registry+https://github.com/rust-lang/crates.io-index)" = "237546c689f20bb44980270c73c3b9edd0891c1be49cc1274406134a66d3957b"
 "checksum serde 0.6.15 (registry+https://github.com/rust-lang/crates.io-index)" = "c97b18e9e53de541f11e497357d6c5eaeb39f0cb9c8734e274abe4935f6991fa"
 "checksum serde_json 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)" = "b5aaee47e038bf9552d30380d3973fff2593ee0a76d81ad4c581f267cdcadf36"
+"checksum siphasher 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "2ffc669b726f2bc9a3bcff66e5e23b56ba6bf70e22a34c3d7b6d0b3450b65b84"
 "checksum spin 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)" = "1d16a26e2b789f86aabddbe91cb82ee2e822beb8a59840d631941b625ef77e53"
-"checksum x86 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)" = "127728f29f7cfb243a9264c80fc7e57bd1abb3ab015850b05736efda2abe5859"
+"checksum x86 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)" = "ada1976e1004a0b5999beb7403541af96637e8f439b97d86c8c9abef2e0e7d19"

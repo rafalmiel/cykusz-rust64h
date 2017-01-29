@@ -80,11 +80,10 @@ pub extern "C" fn isr_handler(ctx: &InterruptContext) {
 }
 
 pub fn init() {
+
     IDT.lock().init();
 
-    unsafe {
-        PICS.lock().init();
-    }
+    PICS.lock().init();
 
     disable_pic();
 

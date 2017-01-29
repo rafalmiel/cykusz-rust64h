@@ -10,7 +10,7 @@ const PAGE_SIZE: usize = 4096;
 
 fn p4_table_addr() -> MappedAddr {
     unsafe {
-        phys_to_physmap(::x86::controlregs::cr3() as PhysAddr)
+        phys_to_physmap(::x86::shared::control_regs::cr3() as PhysAddr)
     }
 }
 
@@ -27,7 +27,7 @@ pub fn map(virt: VirtAddr) {
         .alloc(page.p1_index());
 
     unsafe {
-        ::x86::tlb::flush(p4_addr);
+        ::x86::shared::tlb::flush(p4_addr);
     }
 }
 
@@ -45,7 +45,7 @@ pub fn unmap(virt: VirtAddr) {
         p1.unmap(page.p1_index());
 
         unsafe {
-            ::x86::tlb::flush_all();
+            ::x86::shared::tlb::flush_all();
         };
     } else {
         println!("ERROR: virt addr 0x{:x} cannot be unmapped", virt);
@@ -66,7 +66,7 @@ pub fn map_to(virt: VirtAddr, phys: PhysAddr) {
         .set(page.p1_index(), &Frame::new(phys));
 
     unsafe {
-        ::x86::tlb::flush(p4_addr);
+        ::x86::shared::tlb::flush(p4_addr);
     }
 }
 
@@ -82,12 +82,12 @@ pub fn map_to_1gb(virt: VirtAddr, phys: PhysAddr) {
         .set_hugepage(page.p3_index(), &Frame::new(phys));
 
     unsafe {
-        ::x86::tlb::flush(p4_addr);
+        ::x86::shared::tlb::flush(p4_addr);
     }
 }
 
 fn enable_nxe_bit() {
-    use x86::msr::{IA32_EFER, rdmsr, wrmsr};
+    use x86::shared::msr::{IA32_EFER, rdmsr, wrmsr};
 
     let nxe_bit = 1 << 11;
     unsafe {
@@ -97,9 +97,9 @@ fn enable_nxe_bit() {
 }
 
 fn enable_write_protect_bit() {
-    use x86::controlregs::{cr0, cr0_write};
+    use x86::shared::control_regs::{cr0, cr0_write, CR0_WRITE_PROTECT};
 
-    unsafe { cr0_write(cr0() | (1 << 16)) };
+    unsafe { cr0_write(cr0() | CR0_WRITE_PROTECT) };
 }
 
 fn remap(mboot_info: &mboot2::Info) {
@@ -153,9 +153,9 @@ fn remap(mboot_info: &mboot2::Info) {
         enable_nxe_bit();
         enable_write_protect_bit();
 
-        ::x86::controlregs::cr3_write(frame.address() as u64);
+        ::x86::shared::control_regs::cr3_write(frame.address() as usize);
 
-        ::x86::tlb::flush_all();
+        ::x86::shared::tlb::flush_all();
     }
 }
 

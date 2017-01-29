@@ -8,28 +8,28 @@ pub trait InOut {
 
 impl InOut for u8 {
     unsafe fn port_in(port: u16) -> u8 {
-        x86::io::inb(port)
+        x86::shared::io::inb(port)
     }
     unsafe fn port_out(port: u16, value: u8) {
-        x86::io::outb(port, value);
+        x86::shared::io::outb(port, value);
     }
 }
 
 impl InOut for u16 {
     unsafe fn port_in(port: u16) -> u16 {
-        x86::io::inw(port)
+        x86::shared::io::inw(port)
     }
     unsafe fn port_out(port: u16, value: u16) {
-        x86::io::outw(port, value);
+        x86::shared::io::outw(port, value);
     }
 }
 
 impl InOut for u32 {
     unsafe fn port_in(port: u16) -> u32 {
-        x86::io::inl(port)
+        x86::shared::io::inl(port)
     }
     unsafe fn port_out(port: u16, value: u32) {
-        x86::io::outl(port, value);
+        x86::shared::io::outl(port, value);
     }
 }
 

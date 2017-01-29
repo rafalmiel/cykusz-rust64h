@@ -30,13 +30,13 @@ mod mboot2;
 mod util;
 
 #[no_mangle]
-pub extern "C" fn notify_alloc(addr: *const u8) {
-    println!("Calling from allocator! 0x{:x}", addr as usize);
+pub extern "C" fn notify_alloc(_addr: *const u8) {
+    //println!("Calling from allocator! 0x{:x}", addr as usize);
 }
 
 #[no_mangle]
-pub extern "C" fn notify_dealloc(addr: *const u8) {
-    println!("Calling from deallocator! 0x{:x}", addr as usize);
+pub extern "C" fn notify_dealloc(_addr: *const u8) {
+    //println!("Calling from deallocator! 0x{:x}", addr as usize);
 }
 
 #[no_mangle]
