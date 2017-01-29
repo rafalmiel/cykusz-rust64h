@@ -50,7 +50,7 @@ build:
 	./update_core_nightly.sh
 
 cargo: build
-	RUSTFLAGS="-L ./build"  cargo rustc --target $(target) --verbose -- -Z no-landing-pads
+	RUSTFLAGS="-L ./build -Z no-landing-pads"  cargo build --target $(target) --verbose
 
 # compile assembly files
 build/arch/$(arch)/asm/%.o: src/arch/$(arch)/asm/%.asm
