@@ -39,15 +39,21 @@ extern {
     fn read_rsp() -> u64;
 }
 
+macro_rules! switch {
+    ($ctx1:ident, $ctx2:ident) => (
+        switch_to((&mut $ctx1) as *mut *mut Context, $ctx2);
+    )
+}
+
 static mut CTX1: *mut Context = 0 as *mut Context;
 static mut CTX2: *mut Context = 0 as *mut Context;
 
-pub extern "C" fn task_2() {
+fn task_2() {
     loop {
         println!("TASK 2");
 
         unsafe {
-            switch_to((&mut CTX2) as *mut *mut Context, CTX1);
+            switch!(CTX2, CTX1);
         }
     }
 }
@@ -63,15 +69,17 @@ pub fn init() {
         (*CTX2).rip = task_2 as usize;
 
         println!("Set rip to 0x{:x}", (*CTX2).rip);
+
+        println!("CTX1 addr 0x{:x}", (&mut CTX1) as *mut *mut Context as usize);
+        println!("CTX2 addr 0x{:x}", CTX2 as usize);
     }
 
     loop {
         println!("TASK 1");
 
         unsafe {
-            println!("CTX1 addr 0x{:x}", (&mut CTX1) as *mut *mut Context as usize);
-            println!("CTX2 addr 0x{:x}", CTX2 as usize);
-            switch_to((&mut CTX1) as *mut *mut Context, CTX2);
+
+            switch!(CTX1, CTX2);
         }
     }
 
