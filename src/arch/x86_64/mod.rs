@@ -3,6 +3,7 @@ pub mod mm;
 pub mod int;
 pub mod apic;
 pub mod pic;
+pub mod task;
 
 use vga;
 use mboot2;

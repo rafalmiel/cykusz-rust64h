@@ -1,6 +1,8 @@
 #![feature(lang_items, asm,unique)]
 #![feature(const_fn)]
 #![feature(associated_type_defaults)]
+#![feature(heap_api)]
+#![feature(naked_functions)]
 #![no_std]
 #![allow(dead_code)]
 #![feature(alloc, collections, step_by, inclusive_range_syntax)]
@@ -95,6 +97,9 @@ pub fn rust_main() {
     }
 
     println!("Allocated on heap!");
+
+    vga::clear_screen();
+    arch::task::init();
 
     loop {}
 }
