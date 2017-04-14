@@ -45,7 +45,7 @@ impl Table {
 
             Table::new_at_frame_mut(&frame).clear();
 
-            entry.set(&frame, entry::PRESENT | entry::WRITABLE);
+            entry.set_frame_flags(&frame, entry::PRESENT | entry::WRITABLE);
         }
     }
 
@@ -53,7 +53,7 @@ impl Table {
         let entry = &mut self.entries[idx];
 
         if !entry.contains(entry::PRESENT) {
-            entry.set(&frame, entry::PRESENT | entry::WRITABLE);
+            entry.set_frame_flags(&frame, entry::PRESENT | entry::WRITABLE);
         }
     }
 
@@ -61,7 +61,7 @@ impl Table {
         let entry = &mut self.entries[idx];
 
         if !entry.contains(entry::PRESENT) {
-            entry.set(&frame, flags);
+            entry.set_frame_flags(&frame, flags);
         }
     }
 
@@ -69,7 +69,7 @@ impl Table {
         let entry = &mut self.entries[idx];
 
         if !entry.contains(entry::PRESENT) {
-            entry.set(&frame, entry::PRESENT | entry::WRITABLE | entry::HUGE_PAGE);
+            entry.set_frame_flags(&frame, entry::PRESENT | entry::WRITABLE | entry::HUGE_PAGE);
         }
     }
 

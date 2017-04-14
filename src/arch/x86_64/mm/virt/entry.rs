@@ -55,7 +55,7 @@ impl Entry {
         }
     }
 
-    pub fn set(&mut self, frame: &Frame, flags: Entry) {
+    pub fn set_frame_flags(&mut self, frame: &Frame, flags: Entry) {
         self.bits = frame.address();
         self.insert(flags);
     }

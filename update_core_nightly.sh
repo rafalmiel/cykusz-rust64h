@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 rustup update nightly
 rustup override add nightly
 rustup component add rust-src
