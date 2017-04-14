@@ -8,11 +8,6 @@ addons:
       - nasm
 
 script:
-  - git clone https://github.com/rust-lang/rust.git
-  - mkdir -p build
-  - rustc --target x86_64-unknown-none-gnu -Z no-landing-pads --out-dir ./build rust/src/libcore/lib.rs
-  - rustc --target x86_64-unknown-none-gnu -Z no-landing-pads -L ./build --out-dir ./build rust/src/liballoc/lib.rs
-  - rustc --target x86_64-unknown-none-gnu -Z no-landing-pads -L ./build --out-dir ./build rust/src/libstd_unicode/lib.rs
-  - rustc --target x86_64-unknown-none-gnu -Z no-landing-pads -L ./build --out-dir ./build rust/src/libcollections/lib.rs
+  - ./update_core_nightly.sh
   - rm Cargo.lock
   - make

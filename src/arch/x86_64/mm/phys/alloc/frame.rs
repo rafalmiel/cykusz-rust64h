@@ -11,7 +11,7 @@ pub struct Frame {
 
 impl Frame {
     // Restrict new static method to the mm submodule
-    pub(arch::mm) fn new(address: PhysAddr) -> Frame {
+    pub(in arch::mm) fn new(address: PhysAddr) -> Frame {
         Frame {
             number: address / PAGE_SIZE
         }
