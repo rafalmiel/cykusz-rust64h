@@ -48,10 +48,10 @@ impl Task {
             let sp = ::alloc::heap::allocate(4096*4, 4096)
                 .offset(4096*4);
             *(sp.offset(-8) as *mut usize) = dead_task as usize;//task finished function
-            *(sp.offset(-24) as *mut usize) = sp.offset(-8) as usize; //0x86;                //rflags
-            *(sp.offset(-32) as *mut usize) = 0; //0x86;                //rflags
-            *(sp.offset(-40) as *mut usize) = ::x86::shared::segmentation::cs().bits() as usize;                //cs
-            *(sp.offset(-48) as *mut usize) = fun as usize;     //rip
+            *(sp.offset(-24) as *mut usize) = sp.offset(-8) as usize;                           //sp
+            *(sp.offset(-32) as *mut usize) = 0x200;                                            //rflags enable interrupts
+            *(sp.offset(-40) as *mut usize) = ::x86::shared::segmentation::cs().bits() as usize;//cs
+            *(sp.offset(-48) as *mut usize) = fun as usize;                                     //rip
             let mut ctx = sp.offset(-(::core::mem::size_of::<Context>() as isize + 48 + 11*8)) as *mut Context;
             (*ctx).rip = isr_return as usize;
             println!("Set rip to 0x{:x}", isr_return as usize);
@@ -104,21 +104,19 @@ pub fn sched() {
 }
 
 #[no_mangle]
+pub extern "C" fn eoi() {
+    int::end_of_interrupt();
+}
+
+#[no_mangle]
 pub extern "C" fn dead_task() {
     println!("TASK 2 FINISHED");
     
     loop {
-        unsafe {
-            if let Some(ref mut t) = TASK2 {
-                //switch!(t, TASK1);
-            }
-        }
     }
 }
 
 fn task_2() {
-    int::end_of_interrupt();
-    int::enable_interrupts();
     let mut i = 0;
     loop {
         if i % 1000000 == 0 {
@@ -133,15 +131,9 @@ pub fn init() {
         TASK2 = Some(Task::new(task_2));
     }
 
-    // unsafe {
-    //     if let Some(ref mut t) = TASK2 {
-    //         launch!(TASK1, t);
-    //     }
-    // }
-
     int::enable_interrupts();
-
     int::fire_timer();
+
     let mut i = 0;
     loop {
         if i % 1000000 == 0 {

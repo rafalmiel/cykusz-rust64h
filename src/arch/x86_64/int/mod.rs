@@ -88,8 +88,6 @@ pub extern "C" fn isr_handler(ctx: &InterruptContext) {
             loop{};
         }
     }
-
-    end_of_interrupt();
 }
 
 pub fn init() {
