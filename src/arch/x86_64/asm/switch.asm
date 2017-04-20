@@ -1,10 +1,10 @@
 section .text
 bits 64
 global switch_to
+; fn switch_to(old: *mut *mut Context, new: *mut Context)
+; old = rsp
+; new = rsi
 switch_to:
-	mov rax, rdi	; old stack ptr
-	mov rdx, rsi	; new stack ptr
-
 	pushfq			; push regs to current ctx
 	push rbp
 	push rbx
@@ -13,8 +13,8 @@ switch_to:
 	push r14
 	push r15
 
-	mov [rax], rsp	; update old ctx ptr with current stack ptr
-	mov rsp, rdx	; switch to new stack
+	mov [rdi], rsp	; update old ctx ptr with current stack ptr
+	mov rsp, rsi	; switch to new stack
 
 	pop r15
 	pop r14
@@ -24,9 +24,4 @@ switch_to:
 	pop rbp
 	popfq
 
-	ret
-
-global read_rsp
-read_rsp:
-	mov rax, rsp
 	ret

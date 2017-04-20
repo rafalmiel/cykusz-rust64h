@@ -101,6 +101,8 @@ pub fn rust_main() {
     vga::clear_screen();
     arch::task::init();
 
+    arch::int::fire_timer();
+
     loop {}
 }
 

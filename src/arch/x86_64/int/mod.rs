@@ -3,6 +3,7 @@ pub mod idt;
 use spin::Mutex;
 use arch::pic;
 use arch::apic::Acpi;
+use arch::task::sched;
 
 static PICS: Mutex<pic::ChainedPics> = Mutex::new(unsafe { pic::ChainedPics::new(0x20, 0x28) });
 static ACPI: Mutex<Acpi> = Mutex::new(Acpi::new());
@@ -47,6 +48,18 @@ pub fn fire_timer() {
     ACPI.lock().lapic.fire_timer();
 }
 
+pub fn enable_interrupts() {
+    unsafe {
+        idt::enable();
+    }
+}
+
+pub fn disable_interrupts() {
+    unsafe {
+        idt::disable();
+    }
+}
+
 pub fn remap_irq(irq: u32) -> u32 {
     if let Some(i) = ACPI.lock().rsdt.remap_irq(irq) {
         return i;
@@ -64,7 +77,7 @@ pub fn init_acpi() {
 pub extern "C" fn isr_handler(ctx: &InterruptContext) {
     match ctx.int_id {
         80 => println!("INTERRUPTS WORKING {} 0x{:x}", ctx.int_id, ctx.error_code),
-        32 => println!("Timer interrupt detected"),
+        32 => sched(),
         33 => println!("Keyboard interrupt detected"),
         14 => {
             println!("PAGE FAULT");
@@ -88,8 +101,4 @@ pub fn init() {
     disable_pic();
 
     init_acpi();
-
-    unsafe {
-        idt::enable();
-    }
 }
