@@ -39,7 +39,8 @@ impl Context {
 #[derive(Copy, Clone, Debug)]
 struct Task {
     ctx: *mut Context,
-    prio: u32
+    prio: u32,
+    fromint: bool
 }
 
 impl Task {
@@ -57,7 +58,8 @@ impl Task {
             println!("Set rip to 0x{:x}", isr_return as usize);
             Task {
                 ctx: ctx,
-                prio: 1
+                prio: 1,
+                fromint: false
             }
         }
     }
@@ -65,7 +67,8 @@ impl Task {
     pub const fn empty() -> Task {
         Task {
             ctx: ::core::ptr::null_mut(),
-            prio: 0
+            prio: 0,
+            fromint: false
         }
     }
 }
@@ -83,24 +86,29 @@ macro_rules! switch {
 
 static mut TASK1: Task = Task::empty();
 static mut TASK2: Option<Task> = None;
+static mut CTASK: *mut Task = ::core::ptr::null_mut();
 static mut T1: bool = true;
 
-pub fn sched() {
-    //println!("Shed!!");
-    //return;
+pub fn sched(fromint: bool) {
+    int::disable_interrupts();
     unsafe {
         if T1 {
             T1 = false;
             if let Some(ref mut t) = TASK2 {
+                t.fromint = fromint;
+                CTASK = t as *mut Task;
                 switch!(TASK1, t);
             }
         } else {
             T1 = true;
             if let Some(ref mut t) = TASK2 {
+                TASK1.fromint = fromint;
+                CTASK = &mut TASK1 as *mut Task;
                 switch!(t, TASK1);
             }
         }
     }
+    int::enable_interrupts();
 }
 
 #[no_mangle]
@@ -116,11 +124,22 @@ pub extern "C" fn dead_task() {
     }
 }
 
+fn resched() {
+    sched(false);
+
+    unsafe {
+        if (*CTASK).fromint {
+            eoi();
+        }
+    }
+}
+
 fn task_2() {
     let mut i = 0;
     loop {
         if i % 1000000 == 0 {
             println!("TASK 2 {}", i);
+            resched();
         }
         i += 1;
     }
@@ -128,6 +147,7 @@ fn task_2() {
 
 pub fn init() {
     unsafe {
+        CTASK = &mut TASK1 as *mut Task;
         TASK2 = Some(Task::new(task_2));
     }
 

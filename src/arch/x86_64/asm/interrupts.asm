@@ -85,7 +85,6 @@ extern eoi
         call eoi
         popAll
         add rsp, 16             ; Remove err code & interrupt ID.
-        xchg bx, bx
         iretq
 
 interrupt_handlers:

@@ -77,7 +77,7 @@ pub fn init_acpi() {
 pub extern "C" fn isr_handler(ctx: &InterruptContext) {
     match ctx.int_id {
         80 => println!("INTERRUPTS WORKING {} 0x{:x}", ctx.int_id, ctx.error_code),
-        32 => sched(),
+        32 => sched(true),
         33 => println!("Keyboard interrupt detected"),
         14 => {
             println!("PAGE FAULT");
