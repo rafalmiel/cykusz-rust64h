@@ -48,6 +48,7 @@ impl Task {
         unsafe {
             let sp = ::alloc::heap::allocate(4096*4, 4096)
                 .offset(4096*4);
+            println!("ALLOCATED!!!");
             *(sp.offset(-8) as *mut usize) = dead_task as usize;//task finished function
             *(sp.offset(-24) as *mut usize) = sp.offset(-8) as usize;                           //sp
             *(sp.offset(-32) as *mut usize) = 0x200;                                            //rflags enable interrupts
@@ -84,31 +85,28 @@ macro_rules! switch {
     )
 }
 
-static mut TASK1: Task = Task::empty();
-static mut TASK2: Option<Task> = None;
-static mut CTASK: *mut Task = ::core::ptr::null_mut();
-static mut T1: bool = true;
+static mut SCHED: Task = Task::empty();
 
-pub fn sched(fromint: bool) {
-    int::disable_interrupts();
-    unsafe {
-        if T1 {
-            T1 = false;
-            if let Some(ref mut t) = TASK2 {
-                t.fromint = fromint;
-                CTASK = t as *mut Task;
-                switch!(TASK1, t);
-            }
-        } else {
-            T1 = true;
-            if let Some(ref mut t) = TASK2 {
-                TASK1.fromint = fromint;
-                CTASK = &mut TASK1 as *mut Task;
-                switch!(t, TASK1);
-            }
+static mut TASK0: Task = Task::empty();
+static mut TASK1: Option<Task> = None;
+static mut TASK2: Option<Task> = None;
+
+static mut CTASK: u8 = 0;
+static mut FROMINT: bool = false;
+
+pub fn scheduler() {
+    loop {
+        unsafe {
+            let t1 = TASK1.unwrap();
+            let t2 = TASK2.unwrap();
+
+            CTASK = 1;
+            switch!(SCHED, t1);
+
+            CTASK = 2;
+            switch!(SCHED, t2);
         }
     }
-    int::enable_interrupts();
 }
 
 #[no_mangle]
@@ -117,20 +115,48 @@ pub extern "C" fn eoi() {
 }
 
 #[no_mangle]
-pub extern "C" fn dead_task() {
+pub fn dead_task() {
     println!("TASK 2 FINISHED");
     
     loop {
     }
 }
 
-fn resched() {
-    sched(false);
-
+pub fn set_from_int() {
     unsafe {
-        if (*CTASK).fromint {
-            eoi();
+        FROMINT = true;
+    }
+}
+
+pub fn resched() {
+    unsafe {      
+        int::disable_interrupts();  
+        match CTASK {
+            0 => switch!(TASK0, SCHED),
+            1 => if let Some(ref mut t) = TASK1 {
+                switch!(t, SCHED);
+            },
+            2 => if let Some(ref mut t) = TASK2 {
+                switch!(t, SCHED);
+            },
+            _ => {}
         }
+        int::enable_interrupts();
+
+        if FROMINT {
+            eoi();
+            FROMINT = false;
+        }
+    }
+}
+
+fn task_1() {
+    let mut i = 0;
+    loop {
+        if i % 1000000 == 0 {
+            println!("TASK 1 {}", i);
+        }
+        i += 1;
     }
 }
 
@@ -147,19 +173,12 @@ fn task_2() {
 
 pub fn init() {
     unsafe {
-        CTASK = &mut TASK1 as *mut Task;
+        CTASK = 0;
+        TASK1 = Some(Task::new(task_1));
         TASK2 = Some(Task::new(task_2));
+        SCHED = Task::new(scheduler);
     }
 
     int::enable_interrupts();
     int::fire_timer();
-
-    let mut i = 0;
-    loop {
-        if i % 1000000 == 0 {
-            println!("TASK 1 {}", i);
-        }
-        i += 1;
-    }
-
 }
