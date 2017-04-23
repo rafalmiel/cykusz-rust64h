@@ -22,7 +22,7 @@ extern crate linked_list_allocator;
 extern crate lazy_static;
 
 pub const HEAP_START: usize = 0xfffff80000000000;
-pub const HEAP_SIZE: usize = 64 * 4096; // 100 KiB / 25 pages
+pub const HEAP_SIZE: usize = 4096 * 4096; // 100 KiB / 25 pages
 pub const HEAP_MAX_SIZE: usize = 4096 * 4096; // 4MB
 
 lazy_static! {
@@ -58,24 +58,34 @@ extern {
 
 #[no_mangle]
 pub extern fn __rust_allocate(size: usize, align: usize) -> *mut u8 {
-    let mut heap = HEAP.lock();
-    let a = heap.allocate_first_fit(size, align);
+    let mut a : Option<*mut u8> = None;
+    {
+        let mut heap = HEAP.lock();
+
+        a = heap.allocate_first_fit(size, align);
+    }
 
     if let Some(addr) = a {
         return addr;
     } else {
-        let top = heap.top();
-        let req = align_up(size, 0x1000);
+        {
+            let mut heap = HEAP.lock();
 
-        if top + req > heap.max_top() {
-            panic!("Out of mem!");
+            let top = heap.top();
+            let req = align_up(size, 0x1000);
+
+            if top + req > heap.max_top() {
+                panic!("Out of mem!");
+            }
+
+            unsafe {
+                request_more_mem(top as *const u8, req);
+            }
+
+            
+
+            heap.extend_last_hole(req);
         }
-
-        unsafe {
-            request_more_mem(top as *const u8, req);
-        }
-
-        heap.extend_last_hole(req);
 
         return __rust_allocate(size, align);
     }

@@ -81,8 +81,6 @@ isr_common:
 
 global isr_return
 isr_return:
-extern eoi
-        call eoi
         xchg bx, bx
         popAll
         add rsp, 16             ; Remove err code & interrupt ID.

@@ -48,7 +48,6 @@ impl Task {
         unsafe {
             let sp = ::alloc::heap::allocate(4096*4, 4096)
                 .offset(4096*4);
-            println!("ALLOCATED!!!");
             *(sp.offset(-8) as *mut usize) = dead_task as usize;//task finished function
             *(sp.offset(-24) as *mut usize) = sp.offset(-8) as usize;                           //sp
             *(sp.offset(-32) as *mut usize) = 0x200;                                            //rflags enable interrupts
@@ -56,7 +55,6 @@ impl Task {
             *(sp.offset(-48) as *mut usize) = fun as usize;                                     //rip
             let mut ctx = sp.offset(-(::core::mem::size_of::<Context>() as isize + 48 + 11*8)) as *mut Context;
             (*ctx).rip = isr_return as usize;
-            println!("Set rip to 0x{:x}", isr_return as usize);
             Task {
                 ctx: ctx,
                 prio: 1,
@@ -92,7 +90,6 @@ static mut TASK1: Option<Task> = None;
 static mut TASK2: Option<Task> = None;
 
 static mut CTASK: u8 = 0;
-static mut FROMINT: bool = false;
 
 pub fn scheduler() {
     loop {
@@ -122,12 +119,6 @@ pub fn dead_task() {
     }
 }
 
-pub fn set_from_int() {
-    unsafe {
-        FROMINT = true;
-    }
-}
-
 pub fn resched() {
     unsafe {      
         int::disable_interrupts();  
@@ -142,11 +133,6 @@ pub fn resched() {
             _ => {}
         }
         int::enable_interrupts();
-
-        if FROMINT {
-            eoi();
-            FROMINT = false;
-        }
     }
 }
 
@@ -155,6 +141,7 @@ fn task_1() {
     loop {
         if i % 1000000 == 0 {
             println!("TASK 1 {}", i);
+            resched();
         }
         i += 1;
     }
@@ -165,7 +152,6 @@ fn task_2() {
     loop {
         if i % 1000000 == 0 {
             println!("TASK 2 {}", i);
-            resched();
         }
         i += 1;
     }

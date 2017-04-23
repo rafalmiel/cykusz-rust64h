@@ -3,7 +3,7 @@ pub mod idt;
 use spin::Mutex;
 use arch::pic;
 use arch::apic::Acpi;
-use arch::task::{resched,set_from_int};
+use arch::task::resched;
 
 static PICS: Mutex<pic::ChainedPics> = Mutex::new(unsafe { pic::ChainedPics::new(0x20, 0x28) });
 static ACPI: Mutex<Acpi> = Mutex::new(Acpi::new());
@@ -77,10 +77,6 @@ pub fn init_acpi() {
 pub extern "C" fn isr_handler(ctx: &InterruptContext) {
     match ctx.int_id {
         80 => println!("INTERRUPTS WORKING {} 0x{:x}", ctx.int_id, ctx.error_code),
-        32 => {
-            set_from_int();
-            resched();
-        },
         33 => println!("Keyboard interrupt detected"),
         14 => {
             println!("PAGE FAULT");
@@ -90,6 +86,12 @@ pub extern "C" fn isr_handler(ctx: &InterruptContext) {
             println!("OTHER INTERRUPT {}", ctx.int_id);
             loop{};
         }
+    }
+
+    end_of_interrupt();
+
+    if ctx.int_id == 32 {
+        resched();
     }
 }
 

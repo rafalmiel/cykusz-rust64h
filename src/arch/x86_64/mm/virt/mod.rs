@@ -165,7 +165,7 @@ pub fn init(mboot_info: &mboot2::Info) {
     //init heap
     let mut addr = 0xfffff80000000000;
 
-    for _ in 0..64 {
+    for _ in 0..4096 {
         map(addr);
 
         addr += 4096;
