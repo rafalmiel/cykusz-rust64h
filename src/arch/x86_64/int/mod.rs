@@ -83,8 +83,8 @@ pub extern "C" fn isr_handler(ctx: &InterruptContext) {
             loop{};
         },
         _ => {
-            println!("OTHER INTERRUPT {}", ctx.int_id);
-            loop{};
+            //println!("OTHER INTERRUPT {}", ctx.int_id);
+            //loop{};
         }
     }
 

@@ -41,6 +41,22 @@ pub extern "C" fn notify_dealloc(_addr: *const u8) {
 }
 
 #[no_mangle]
+pub extern "C" fn log(l: &str) {
+    print!("{}", l);
+}
+
+#[no_mangle]
+pub extern "C" fn logln(l: &str) {
+    println!("{}", l);
+}
+
+
+#[no_mangle]
+pub extern "C" fn logn(n: usize) {
+    print!("0x{:x}", n);
+}
+
+#[no_mangle]
 pub extern "C" fn request_more_mem(from: *const u8, size: usize) {
     println!("Requesting more mem! 0x{:x} - size: 0x{:x}", from as usize, size);
     for addr in (from as usize..from as usize + size).step_by(arch::mm::PAGE_SIZE) {

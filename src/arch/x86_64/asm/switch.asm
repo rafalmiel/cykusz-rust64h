@@ -5,7 +5,6 @@ global switch_to
 ; old = rsp
 ; new = rsi
 switch_to:
-	xchg bx, bx
 	pushfq			; push regs to current ctx
 	push rbp
 	push rbx

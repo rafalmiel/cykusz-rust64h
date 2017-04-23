@@ -9,6 +9,7 @@
 
 #![feature(allocator)]
 #![feature(const_fn)]
+#![feature(asm)]
 
 #![allocator]
 #![no_std]
@@ -22,7 +23,7 @@ extern crate linked_list_allocator;
 extern crate lazy_static;
 
 pub const HEAP_START: usize = 0xfffff80000000000;
-pub const HEAP_SIZE: usize = 4096 * 4096; // 100 KiB / 25 pages
+pub const HEAP_SIZE: usize = 4 * 4096; // 100 KiB / 25 pages
 pub const HEAP_MAX_SIZE: usize = 4096 * 4096; // 4MB
 
 lazy_static! {
@@ -58,7 +59,7 @@ extern {
 
 #[no_mangle]
 pub extern fn __rust_allocate(size: usize, align: usize) -> *mut u8 {
-    let mut a : Option<*mut u8> = None;
+    let a : Option<*mut u8>;
     {
         let mut heap = HEAP.lock();
 
@@ -82,9 +83,7 @@ pub extern fn __rust_allocate(size: usize, align: usize) -> *mut u8 {
                 request_more_mem(top as *const u8, req);
             }
 
-            
-
-            heap.extend_last_hole(req);
+            heap.extend_last_hole(top, req);
         }
 
         return __rust_allocate(size, align);

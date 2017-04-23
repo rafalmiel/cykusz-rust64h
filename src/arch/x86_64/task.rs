@@ -141,7 +141,7 @@ fn task_1() {
     loop {
         if i % 1000000 == 0 {
             println!("TASK 1 {}", i);
-            resched();
+            //resched();
         }
         i += 1;
     }
