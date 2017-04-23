@@ -31,22 +31,22 @@ mod mboot2;
 mod util;
 
 #[no_mangle]
-pub extern "C" fn notify_alloc(_addr: *const u8) {
+pub fn notify_alloc(_addr: *const u8) {
     //println!("Calling from allocator! 0x{:x}", addr as usize);
 }
 
 #[no_mangle]
-pub extern "C" fn notify_dealloc(_addr: *const u8) {
+pub fn notify_dealloc(_addr: *const u8) {
     //println!("Calling from deallocator! 0x{:x}", addr as usize);
 }
 
 #[no_mangle]
-pub extern "C" fn log(l: &str) {
+pub fn log(l: &str) {
     print!("{}", l);
 }
 
 #[no_mangle]
-pub extern "C" fn logln(l: &str) {
+pub fn logln(l: &str) {
     println!("{}", l);
 }
 
