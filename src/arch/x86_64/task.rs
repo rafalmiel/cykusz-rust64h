@@ -53,7 +53,9 @@ struct Task {
     //0 unused
     //1 running
     //2 runnable
+    //3 to_reschedule
     state: u32,
+    locks: u32
 }
 
 impl Task {
@@ -71,6 +73,7 @@ impl Task {
             Task {
                 ctx: ContextMutPtr(ctx),
                 state: 2,
+                locks: 0,
             }
         }
     }
@@ -79,6 +82,7 @@ impl Task {
         Task {
             ctx: ContextMutPtr(::core::ptr::null_mut()),
             state: 0,
+            locks: 0,
         }
     }
 }
@@ -98,6 +102,7 @@ struct Scheduler {
     sched_task: Task,
     tasks: [Task; 32],
     current: usize,
+    init: bool
 }
 
 impl Scheduler {
@@ -106,12 +111,14 @@ impl Scheduler {
             sched_task: Task::empty(),
             tasks: [Task::empty(); 32],
             current: 0,
+            init: false
         }
     }
 
     pub fn init(&mut self) {
         self.sched_task = Task::new(scheduler);
         self.tasks[0].state = 1;
+        self.init = true;
     }
 
     pub fn add_task(&mut self, fun: fn()) {
@@ -129,7 +136,34 @@ impl Scheduler {
         }
     }
 
+    pub fn task_locked(&mut self) {
+        if self.init {
+            self.tasks[self.current].locks += 1;
+        }
+    }
+
+    pub fn task_unlocked(&mut self) {
+        if self.init {
+            let ref mut t = self.tasks[self.current];
+            t.locks -= 1;
+
+            if t.state == 3 && t.locks == 0 {
+                t.state = 1;
+                resched();
+            }
+        }
+    }
+
     pub fn schedule_next(&mut self) {
+        if self.tasks[self.current].locks > 0 {
+            self.tasks[self.current].state = 3;
+            unsafe {
+                switch!(self.sched_task, self.tasks[self.current]);
+            }
+            return;
+        }
+
+
         let mut to: Option<usize> = None;
         for i in (self.current+1)..32 {
             if self.tasks[i as usize].state == 2 {
@@ -167,13 +201,23 @@ impl Scheduler {
 
 static mut SCHEDULER : Scheduler = Scheduler::empty();
 
+pub fn task_locked() {
+    unsafe {
+        SCHEDULER.task_locked();
+    }
+}
+
+pub fn task_unlocked() {
+    unsafe {
+        SCHEDULER.task_unlocked();
+    }
+}
+
 pub fn create_kern_task(fun: fn()) {
     unsafe {
         SCHEDULER.add_task(fun);
     } 
 }
-
-static mut SCHED: Task = Task::empty();
 
 pub fn scheduler() {
     loop {
@@ -202,9 +246,7 @@ pub fn resched() {
 fn task_1() {
     let mut i: u32 = 0;
     loop {
-        if i % 1000000 == 0 {
-            println!("TASK 1 {}", i);
-        }
+        println!("TASK 1 {}", i);
         i += 1;
 
         if i == ::core::u32::MAX {
@@ -216,9 +258,7 @@ fn task_1() {
 fn task_2() {
     let mut i: u32 = 0;
     loop {
-        if i % 1000000 == 0 {
-            println!("TASK 2 {}", i);
-        }
+        println!("TASK 2 {}", i);
         i += 1;
 
         if i == ::core::u32::MAX {
@@ -230,9 +270,7 @@ fn task_2() {
 fn task_3() {
     let mut i: u32 = 0;
     loop {
-        if i % 1000000 == 0 {
-            println!("TASK 3 {}", i);
-        }
+        println!("TASK 3 {}", i);
         i += 1;
 
         if i == ::core::u32::MAX {
@@ -244,9 +282,7 @@ fn task_3() {
 fn task_4() {
     let mut i: u32 = 0;
     loop {
-        if i % 1000000 == 0 {
-            println!("TASK 4 {}", i);
-        }
+        println!("TASK 4 {}", i);
         i += 1;
 
         if i == ::core::u32::MAX {

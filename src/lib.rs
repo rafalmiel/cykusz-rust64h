@@ -58,9 +58,9 @@ pub extern "C" fn logn(n: usize) {
 
 #[no_mangle]
 pub extern "C" fn request_more_mem(from: *const u8, size: usize) {
-    println!("Requesting more mem! 0x{:x} - size: 0x{:x}", from as usize, size);
+    //println!("Requesting more mem! 0x{:x} - size: 0x{:x}", from as usize, size);
     for addr in (from as usize..from as usize + size).step_by(arch::mm::PAGE_SIZE) {
-        println!("MAP 0x{:x}", addr);
+        //println!("MAP 0x{:x}", addr);
         arch::mm::virt::map(addr);
     }
 }

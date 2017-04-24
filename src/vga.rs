@@ -1,5 +1,5 @@
 use core::ptr::Unique;
-use spin::Mutex;
+use arch::sync::Mutex;
 
 use arch::cpuio::Port;
 use arch::mm::PhysAddr;

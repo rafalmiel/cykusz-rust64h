@@ -4,6 +4,7 @@ pub mod int;
 pub mod apic;
 pub mod pic;
 pub mod task;
+pub mod sync;
 
 use vga;
 use mboot2;
