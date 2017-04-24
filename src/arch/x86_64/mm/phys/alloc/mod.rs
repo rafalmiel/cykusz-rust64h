@@ -1,6 +1,6 @@
 pub mod frame;
 
-use spin::Mutex;
+use arch::sync::Mutex;
 
 use arch::mm::PhysAddr;
 use arch::mm::MappedAddr;

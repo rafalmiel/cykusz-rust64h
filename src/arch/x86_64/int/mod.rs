@@ -1,6 +1,6 @@
 pub mod idt;
 
-use spin::Mutex;
+use arch::sync::Mutex;
 use arch::pic;
 use arch::apic::Acpi;
 use arch::task::resched;
