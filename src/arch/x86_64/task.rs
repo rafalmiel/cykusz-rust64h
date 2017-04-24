@@ -1,5 +1,10 @@
 use super::int;
 
+//TODO:
+// - improve spin lock mutex - don't deschedule while holding a lock
+// - create proper scheduler with many processes
+// - cleanup api
+
 #[derive(Clone, Debug)]
 #[repr(C)]
 pub struct Context {
@@ -21,6 +26,11 @@ pub struct Context {
     pub rip: usize
 }
 
+#[derive(Copy, Clone, Debug)]
+struct ContextMutPtr(*mut Context);
+
+unsafe impl Send for ContextMutPtr {}
+
 impl Context {
     const fn empty() -> Context {
         Context {
@@ -38,9 +48,12 @@ impl Context {
 
 #[derive(Copy, Clone, Debug)]
 struct Task {
-    ctx: *mut Context,
-    prio: u32,
-    fromint: bool
+    ctx: ContextMutPtr,
+
+    //0 unused
+    //1 running
+    //2 runnable
+    state: u32,
 }
 
 impl Task {
@@ -56,18 +69,16 @@ impl Task {
             let mut ctx = sp.offset(-(::core::mem::size_of::<Context>() as isize + 48 + 11*8)) as *mut Context;
             (*ctx).rip = isr_return as usize;
             Task {
-                ctx: ctx,
-                prio: 1,
-                fromint: false
+                ctx: ContextMutPtr(ctx),
+                state: 2,
             }
         }
     }
 
     pub const fn empty() -> Task {
         Task {
-            ctx: ::core::ptr::null_mut(),
-            prio: 0,
-            fromint: false
+            ctx: ContextMutPtr(::core::ptr::null_mut()),
+            state: 0,
         }
     }
 }
@@ -78,37 +89,98 @@ extern "C" {
 }
 
 macro_rules! switch {
-    ($ctx1:ident, $ctx2:ident) => (
-        switch_to((&mut $ctx1.ctx) as *mut *mut Context, $ctx2.ctx);
+    ($ctx1:expr, $ctx2:expr) => (
+        switch_to((&mut $ctx1.ctx.0) as *mut *mut Context, $ctx2.ctx.0);
     )
 }
 
-static mut SCHED: Task = Task::empty();
+struct Scheduler {
+    sched_task: Task,
+    tasks: [Task; 32],
+    current: usize,
+}
 
-static mut TASK0: Task = Task::empty();
-static mut TASK1: Option<Task> = None;
-static mut TASK2: Option<Task> = None;
+impl Scheduler {
+    pub const fn empty() -> Scheduler {
+        Scheduler {
+            sched_task: Task::empty(),
+            tasks: [Task::empty(); 32],
+            current: 0,
+        }
+    }
 
-static mut CTASK: u8 = 0;
+    pub fn init(&mut self) {
+        self.sched_task = Task::new(scheduler);
+        self.tasks[0].state = 1;
+    }
 
-pub fn scheduler() {
-    loop {
+    pub fn add_task(&mut self, fun: fn()) {
+        for i in 0..32 {
+            if self.tasks[i].state == 0 {
+                self.tasks[i] = Task::new(fun);
+                return;
+            }
+        }
+    }
+
+    pub fn resched(&mut self) {
         unsafe {
-            let t1 = TASK1.unwrap();
-            let t2 = TASK2.unwrap();
+            switch!(self.tasks[self.current], self.sched_task);
+        }
+    }
 
-            CTASK = 1;
-            switch!(SCHED, t1);
+    pub fn schedule_next(&mut self) {
+        let mut to: Option<usize> = None;
+        for i in (self.current+1)..32 {
+            if self.tasks[i as usize].state == 2 {
+                to = Some(i as usize);
+                break;
+            }
+        }
 
-            CTASK = 2;
-            switch!(SCHED, t2);
+        if to.is_none() {
+            for i in 1..(self.current+1) {
+                if self.tasks[i as usize].state == 2 {
+                    to = Some(i as usize);
+                    break;
+                }
+            }
+        }
+        
+        if to.is_none() {
+            to = Some(0 as usize);
+        }
+
+        if let Some(t) = to {
+            self.tasks[self.current as usize].state = 2;
+            self.tasks[t].state = 1;
+            self.current = t;
+
+            unsafe {
+                switch!(self.sched_task, self.tasks[t]);
+            }
+        } else {
+            panic!("SCHED: to not found...");
         }
     }
 }
 
-#[no_mangle]
-pub extern "C" fn eoi() {
-    int::end_of_interrupt();
+static mut SCHEDULER : Scheduler = Scheduler::empty();
+
+pub fn create_kern_task(fun: fn()) {
+    unsafe {
+        SCHEDULER.add_task(fun);
+    } 
+}
+
+static mut SCHED: Task = Task::empty();
+
+pub fn scheduler() {
+    loop {
+        unsafe {
+            SCHEDULER.schedule_next();
+        }
+    }
 }
 
 #[no_mangle]
@@ -120,50 +192,77 @@ pub fn dead_task() {
 }
 
 pub fn resched() {
-    unsafe {      
-        int::disable_interrupts();  
-        match CTASK {
-            0 => switch!(TASK0, SCHED),
-            1 => if let Some(ref mut t) = TASK1 {
-                switch!(t, SCHED);
-            },
-            2 => if let Some(ref mut t) = TASK2 {
-                switch!(t, SCHED);
-            },
-            _ => {}
-        }
-        int::enable_interrupts();
+    int::disable_interrupts();
+    unsafe {
+        SCHEDULER.resched();
     }
+    int::enable_interrupts();
 }
 
 fn task_1() {
-    let mut i = 0;
+    let mut i: u32 = 0;
     loop {
         if i % 1000000 == 0 {
             println!("TASK 1 {}", i);
-            //resched();
         }
         i += 1;
+
+        if i == ::core::u32::MAX {
+            i = 0;
+        }
     }
 }
 
 fn task_2() {
-    let mut i = 0;
+    let mut i: u32 = 0;
     loop {
         if i % 1000000 == 0 {
             println!("TASK 2 {}", i);
         }
         i += 1;
+
+        if i == ::core::u32::MAX {
+            i = 0;
+        }
+    }
+}
+
+fn task_3() {
+    let mut i: u32 = 0;
+    loop {
+        if i % 1000000 == 0 {
+            println!("TASK 3 {}", i);
+        }
+        i += 1;
+
+        if i == ::core::u32::MAX {
+            i = 0;
+        }
+    }
+}
+
+fn task_4() {
+    let mut i: u32 = 0;
+    loop {
+        if i % 1000000 == 0 {
+            println!("TASK 4 {}", i);
+        }
+        i += 1;
+
+        if i == ::core::u32::MAX {
+            i = 0;
+        }
     }
 }
 
 pub fn init() {
     unsafe {
-        CTASK = 0;
-        TASK1 = Some(Task::new(task_1));
-        TASK2 = Some(Task::new(task_2));
-        SCHED = Task::new(scheduler);
+        SCHEDULER.init();
     }
+    create_kern_task(task_1);
+    create_kern_task(task_2);
+    create_kern_task(task_3);
+    create_kern_task(task_4);
 
     int::enable_interrupts();
     int::fire_timer();

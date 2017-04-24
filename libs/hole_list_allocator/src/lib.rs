@@ -28,7 +28,7 @@ pub const HEAP_MAX_SIZE: usize = 4096 * 4096; // 4MB
 
 lazy_static! {
     static ref HEAP: Mutex<Heap> = Mutex::new(unsafe {
-        Heap::new(HEAP_START, HEAP_SIZE, HEAP_MAX_SIZE)
+        Heap::new_max(HEAP_START, HEAP_SIZE, HEAP_MAX_SIZE)
     });
 }
 
@@ -83,7 +83,7 @@ pub extern fn __rust_allocate(size: usize, align: usize) -> *mut u8 {
                 request_more_mem(top as *const u8, req);
             }
 
-            heap.extend_last_hole(top, req);
+            heap.extend(req);
         }
 
         return __rust_allocate(size, align);
