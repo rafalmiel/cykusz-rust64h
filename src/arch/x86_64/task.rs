@@ -54,8 +54,10 @@ struct Task {
     //1 running
     //2 runnable
     //3 to_reschedule
+    //4 to_delete
     state: u32,
-    locks: u32
+    locks: u32,
+    stack_top: usize,
 }
 
 impl Task {
@@ -74,6 +76,7 @@ impl Task {
                 ctx: ContextMutPtr(ctx),
                 state: 2,
                 locks: 0,
+                stack_top: sp as usize - 4096*4,
             }
         }
     }
@@ -83,7 +86,18 @@ impl Task {
             ctx: ContextMutPtr(::core::ptr::null_mut()),
             state: 0,
             locks: 0,
+            stack_top: 0,
         }
+    }
+
+    pub fn deallocate(&mut self) {
+        self.state = 0;
+        self.ctx = ContextMutPtr(::core::ptr::null_mut());
+        self.locks = 0;
+        unsafe {
+            ::alloc::heap::deallocate(self.stack_top as *mut u8, 4096*4, 4096);
+        }
+        self.stack_top = 0;
     }
 }
 
@@ -154,15 +168,24 @@ impl Scheduler {
         }
     }
 
+    pub fn task_finished(&mut self) {
+        let ref mut t = self.tasks[self.current];
+        t.state = 4;
+        resched();
+    }
+
     pub fn schedule_next(&mut self) {
-        if self.tasks[self.current].locks > 0 {
+        if self.tasks[self.current].state == 4 {
+            self.tasks[self.current].deallocate();
+            return;
+        }
+        else if self.tasks[self.current].locks > 0 {
             self.tasks[self.current].state = 3;
             unsafe {
                 switch!(self.sched_task, self.tasks[self.current]);
             }
             return;
         }
-
 
         let mut to: Option<usize> = None;
         for i in (self.current+1)..32 {
@@ -186,7 +209,9 @@ impl Scheduler {
         }
 
         if let Some(t) = to {
-            self.tasks[self.current as usize].state = 2;
+            if self.tasks[self.current as usize].state == 1 {
+                self.tasks[self.current as usize].state = 2;
+            }
             self.tasks[t].state = 1;
             self.current = t;
 
@@ -227,11 +252,10 @@ pub fn scheduler() {
     }
 }
 
-#[no_mangle]
 pub fn dead_task() {
-    println!("TASK 2 FINISHED");
-    
-    loop {
+    println!("TASK FINISHED");
+    unsafe {
+        SCHEDULER.task_finished();
     }
 }
 
@@ -245,7 +269,7 @@ pub fn resched() {
 
 fn task_1() {
     let mut i: u32 = 0;
-    loop {
+    for _ in 0..10 {
         println!("TASK 1 {}", i);
         i += 1;
 
@@ -257,7 +281,7 @@ fn task_1() {
 
 fn task_2() {
     let mut i: u32 = 0;
-    loop {
+    for _ in 0..200 {
         println!("TASK 2 {}", i);
         i += 1;
 
@@ -269,7 +293,7 @@ fn task_2() {
 
 fn task_3() {
     let mut i: u32 = 0;
-    loop {
+    for _ in 0..200 {
         println!("TASK 3 {}", i);
         i += 1;
 
@@ -281,7 +305,7 @@ fn task_3() {
 
 fn task_4() {
     let mut i: u32 = 0;
-    loop {
+    for _ in 0..200 {
         println!("TASK 4 {}", i);
         i += 1;
 
