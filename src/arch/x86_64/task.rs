@@ -270,7 +270,7 @@ pub fn resched() {
 fn task_1() {
     let mut i: u32 = 0;
     for _ in 0..10 {
-        println!("TASK 1 {}", i);
+        //println!("TASK 1 {}", i);
         i += 1;
 
         if i == ::core::u32::MAX {
@@ -282,7 +282,7 @@ fn task_1() {
 fn task_2() {
     let mut i: u32 = 0;
     for _ in 0..200 {
-        println!("TASK 2 {}", i);
+        //println!("TASK 2 {}", i);
         i += 1;
 
         if i == ::core::u32::MAX {
@@ -294,7 +294,7 @@ fn task_2() {
 fn task_3() {
     let mut i: u32 = 0;
     for _ in 0..200 {
-        println!("TASK 3 {}", i);
+        //println!("TASK 3 {}", i);
         i += 1;
 
         if i == ::core::u32::MAX {
@@ -306,7 +306,7 @@ fn task_3() {
 fn task_4() {
     let mut i: u32 = 0;
     for _ in 0..200 {
-        println!("TASK 4 {}", i);
+        //println!("TASK 4 {}", i);
         i += 1;
 
         if i == ::core::u32::MAX {

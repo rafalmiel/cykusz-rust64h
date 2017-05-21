@@ -15,7 +15,7 @@
 #![no_std]
 
 use spin::Mutex;
-use linked_list_allocator::Heap;
+use linked_list_allocator::Heap as LHeap;
 
 extern crate spin;
 extern crate linked_list_allocator;
@@ -24,11 +24,19 @@ extern crate lazy_static;
 
 pub const HEAP_START: usize = 0xfffff80000000000;
 pub const HEAP_SIZE: usize = 4 * 4096; // 100 KiB / 25 pages
-pub const HEAP_MAX_SIZE: usize = 4096 * 4096; // 4MB
+pub const HEAP_END: usize = HEAP_START + 4096 * 4096; // 4MB
+
+struct Heap {
+    pub size: usize,
+    pub list: LHeap,
+}
 
 lazy_static! {
     static ref HEAP: Mutex<Heap> = Mutex::new(unsafe {
-        Heap::new_max(HEAP_START, HEAP_SIZE, HEAP_MAX_SIZE)
+        Heap { 
+            size: HEAP_SIZE,
+            list: LHeap::new(HEAP_START, HEAP_SIZE),
+        }
     });
 }
 
@@ -63,7 +71,7 @@ pub extern fn __rust_allocate(size: usize, align: usize) -> *mut u8 {
     {
         let mut heap = HEAP.lock();
 
-        a = heap.allocate_first_fit(size, align);
+        a = heap.list.allocate_first_fit(size, align);
     }
 
     if let Some(addr) = a {
@@ -72,18 +80,18 @@ pub extern fn __rust_allocate(size: usize, align: usize) -> *mut u8 {
         {
             let mut heap = HEAP.lock();
 
-            let top = heap.top();
+            let top = HEAP_START + heap.size;
             let req = align_up(size, 0x1000);
 
-            if top + req > heap.max_top() {
+            if top + req > HEAP_END {
                 panic!("Out of mem!");
             }
 
             unsafe {
                 request_more_mem(top as *const u8, req);
+                heap.list.extend(req);
+                heap.size += req;
             }
-
-            heap.extend(req);
         }
 
         return __rust_allocate(size, align);
@@ -93,7 +101,7 @@ pub extern fn __rust_allocate(size: usize, align: usize) -> *mut u8 {
 #[no_mangle]
 pub extern fn __rust_deallocate(ptr: *mut u8, size: usize, align: usize) {
     unsafe { notify_dealloc(ptr as *const u8) };
-    unsafe { HEAP.lock().deallocate(ptr, size, align) };
+    unsafe { HEAP.lock().list.deallocate(ptr, size, align) };
 }
 
 #[no_mangle]
