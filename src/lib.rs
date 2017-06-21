@@ -8,9 +8,8 @@
 #![feature(alloc, collections, step_by, inclusive_range_syntax)]
 
 extern crate hole_list_allocator;
-extern crate alloc;
 #[macro_use]
-extern crate collections;
+extern crate alloc;
 
 extern crate rlibc;
 extern crate spin;
