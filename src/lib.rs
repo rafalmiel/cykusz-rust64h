@@ -5,7 +5,7 @@
 #![feature(naked_functions)]
 #![no_std]
 #![allow(dead_code)]
-#![feature(alloc, iterator_step_by, inclusive_range_syntax)]
+#![feature(alloc, step_by, inclusive_range_syntax)]
 
 extern crate hole_list_allocator;
 #[macro_use]
@@ -58,14 +58,24 @@ pub extern "C" fn logn(n: usize) {
 #[no_mangle]
 pub extern "C" fn request_more_mem(from: *const u8, size: usize) {
     //println!("Requesting more mem! 0x{:x} - size: 0x{:x}", from as usize, size);
-    for addr in (from as usize..from as usize + size).skip(0).step_by(arch::mm::PAGE_SIZE) {
+    for addr in (from as usize..from as usize + size).step_by(arch::mm::PAGE_SIZE) {
         //println!("MAP 0x{:x}", addr);
         arch::mm::virt::map(addr);
     }
 }
 
+extern "C" {
+    fn switch_to_user();
+}
+
 pub fn rust_main() {
     println!("In rust main!");
+
+    unsafe {
+        switch_to_user();
+
+        loop{}
+    }
 
     // for _ in 1..1 {
     //     let a = arch::mm::phys::allocate();
