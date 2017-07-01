@@ -129,7 +129,7 @@ fn remap(mboot_info: &mboot2::Info) {
 
         println!("from 0x{:x} to 0x{:x} with flags 0x{:x}", s, e, flags.raw());
 
-        for addr in (s..e).step_by(PAGE_SIZE) {
+        for addr in (s..e).skip(0).step_by(PAGE_SIZE) {
             let p = page::Page::new(phys_to_virt(addr));
             let f = Frame::new(addr);
 
@@ -163,7 +163,7 @@ pub fn init(mboot_info: &mboot2::Info) {
     remap(&mboot_info);
 
     //init heap
-    for addr in (0xfffff80000000000..(0xfffff80000000000 + 4*4096)).step_by(4096) {
+    for addr in (0xfffff80000000000..(0xfffff80000000000 + 4*4096)).skip(0).step_by(4096) {
         map(addr);
     }
 }

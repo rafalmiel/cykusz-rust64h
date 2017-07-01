@@ -26,7 +26,7 @@ impl Rsdp {
         let iter = (
             phys_to_physmap(0xE000) as u64
             ..
-            phys_to_physmap(0x10_0000) as u64).step_by(0x10u64);
+            phys_to_physmap(0x10_0000) as u64).skip(0).step_by(0x10);
 
         // TODO: Check ebda address
 
