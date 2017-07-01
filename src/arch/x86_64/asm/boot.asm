@@ -3,10 +3,6 @@ global gdt64_code_offset
 global error
 
 extern long_mode_start
-extern gdt64
-extern gdt64_code
-extern gdt64_data
-extern gdt64_pointer
 extern test_multiboot
 extern test_cpuid
 extern test_long_mode
@@ -28,9 +24,9 @@ start:
 	call setup_page_tables
 	call enable_paging
 
-	lgdt [gdt64_pointer]
+	lgdt [gdt64.pointer]
 
-	jmp gdt64_code:long_mode_start
+	jmp gdt64.code:long_mode_start
 
 error:
 	mov dword [0xb8000], 0x4f524f45 ; ER
@@ -43,3 +39,19 @@ section .bss
 boot_stack_bottom:
 	resb 512
 boot_stack_top:
+
+; lower half gdt
+section .rodata
+bits 64
+gdt64:
+	dq 0														    ; zero entry
+.code: equ $ - gdt64
+	dw 0			; Limit (low)
+	dw 0			; Base (low)
+	db 0			; Base (middle)
+	db 10011011b	; Access (Pr Privl=0 1 Ex Dc=0 RW Ac)
+	db 00100000b	; Flags (64bit) Limit (high)
+	db 0			; Base (high)
+.pointer:
+	dw $ - gdt64 - 1
+	dq gdt64
