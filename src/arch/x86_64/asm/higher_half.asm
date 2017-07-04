@@ -45,8 +45,8 @@ switch_to_user:
 
   mov ax,0x23
   mov ds,ax
-  mov es,ax 
-  mov fs,ax 
+  mov es,ax
+  mov fs,ax
   mov gs,ax
 
   xchg bx, bx
