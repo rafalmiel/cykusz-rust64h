@@ -1,4 +1,4 @@
-mod entry;
+pub mod entry;
 mod page;
 mod table;
 
@@ -14,21 +14,25 @@ fn p4_table_addr() -> MappedAddr {
     }
 }
 
-pub fn map(virt: VirtAddr) {
+pub fn map_flags(virt: VirtAddr, flags: entry::Entry) {
     let page = page::Page::new(virt);
     let p4_addr = physmap_to_phys(p4_table_addr());
 
     Table::new_at_frame_mut(
         &Frame::new(p4_addr)
     )
-        .alloc_next_level(page.p4_index())
-        .alloc_next_level(page.p3_index())
-        .alloc_next_level(page.p2_index())
-        .alloc(page.p1_index());
+        .alloc_next_level_flags(page.p4_index(), flags)
+        .alloc_next_level_flags(page.p3_index(), flags)
+        .alloc_next_level_flags(page.p2_index(), flags)
+        .alloc_set_flags(page.p1_index(), flags);
 
     unsafe {
         ::x86::shared::tlb::flush(p4_addr);
     }
+}
+
+pub fn map(virt: VirtAddr) {
+    map_flags(virt, entry::WRITABLE);
 }
 
 pub fn unmap(virt: VirtAddr) {
@@ -126,8 +130,6 @@ fn remap(mboot_info: &mboot2::Info) {
         if (elf.flags as usize & ElfSectionFlags::Executable as usize) == 0 {
             flags.insert(entry::NO_EXECUTE);
         }
-
-        flags.insert(entry::USER);
 
         println!("from 0x{:x} to 0x{:x} with flags 0x{:x}", s, e, flags.raw());
 

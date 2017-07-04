@@ -49,7 +49,8 @@ switch_to_user:
   mov fs,ax 
   mov gs,ax
 
-  mov rax, in_user
+  xchg bx, bx
+  mov rax, 0x400000
   mov rbx, rsp
 	push 0x23
 	push rbx

@@ -29,6 +29,14 @@ impl Info {
         item.addr as PhysAddr + item.size as PhysAddr
     }
 
+    pub fn modules_start_addr(&self) -> Option<PhysAddr> {
+        self.modules_tags().nth(0).and_then(|m| Some(m.mod_start as PhysAddr))
+    }
+
+    pub fn modules_end_addr(&self) -> Option<PhysAddr> {
+        self.modules_tags().last().and_then(|m| Some(m.mod_end as PhysAddr))
+    }
+
     pub fn tags(&self) -> tags::TagIter {
         tags::TagIter {
             current: &self.tag as *const _
@@ -63,5 +71,22 @@ impl Info {
                 &*(t as *const tags::Tag as *const tags::elf::Elf)
             }
         )
+    }
+
+    pub fn modules_tags(&self) ->
+        ::core::iter::FilterMap<
+            tags::TagIter,
+            fn(&tags::Tag) -> Option<&'static tags::modules::Modules>
+        > {
+
+        self.tags().filter_map(|t| {
+            if t.typ == 3 {
+                Some(unsafe {
+                    &*(t as *const tags::Tag as *const tags::modules::Modules)
+                })
+            } else {
+                None
+            }
+        })
     }
 }

@@ -10,7 +10,9 @@ pub struct PhysMemIterator {
     kern_start:     PhysAddr,
     kern_end:       PhysAddr,
     mboot_start:    PhysAddr,
-    mboot_end:      PhysAddr
+    mboot_end:      PhysAddr,
+    modules_start:  PhysAddr,
+    modules_end:    PhysAddr
 }
 
 fn not_contains(saddr: PhysAddr, start: PhysAddr, end: PhysAddr) -> bool {
@@ -25,7 +27,9 @@ impl PhysMemIterator {
                kern_start:      PhysAddr,
                kern_end:        PhysAddr,
                mboot_start:     PhysAddr,
-               mboot_end:       PhysAddr) -> PhysMemIterator {
+               mboot_end:       PhysAddr,
+               modules_start:   PhysAddr,
+               modules_end:     PhysAddr) -> PhysMemIterator {
         let ent = mm_iter.next().expect("Memory iterator needs at least one value");
 
         PhysMemIterator {
@@ -36,13 +40,16 @@ impl PhysMemIterator {
             kern_start:     kern_start,
             kern_end:       kern_end,
             mboot_start:    mboot_start,
-            mboot_end:      mboot_end
+            mboot_end:      mboot_end,
+            modules_start:  modules_start,
+            modules_end:    modules_end
         }
     }
 
     fn is_valid(&self, addr: PhysAddr) -> bool {
         not_contains(addr, self.kern_start, self.kern_end) &&
-        not_contains(addr, self.mboot_start, self.mboot_end)
+        not_contains(addr, self.mboot_start, self.mboot_end) &&
+        not_contains(addr, self.modules_start, self.modules_end)
     }
 }
 

@@ -57,6 +57,20 @@ impl Table {
         }
     }
 
+    pub fn alloc_set_flags(&mut self, idx: usize, flags: entry::Entry) {
+        let entry = &mut self.entries[idx];
+
+        if !entry.contains(entry::PRESENT) {
+            let frame = ::arch::mm::phys::allocate().expect("Out of memory!");
+
+            Table::new_at_frame_mut(&frame).clear();
+
+            entry.set_frame_flags(&frame, flags | entry::PRESENT);
+        } else {
+            panic!("Failed to alloc new frame..");
+        }
+    }
+
     pub fn set_flags(&mut self, idx: usize, frame: &Frame, flags: entry::Entry) {
         let entry = &mut self.entries[idx];
 
@@ -83,6 +97,22 @@ impl Table {
 
             entry.clear();
         }
+    }
+
+    pub fn alloc_next_level_flags(&mut self, idx: usize, flags: entry::Entry) -> &mut Table {
+        let entry = &mut self.entries[idx];
+
+        if !entry.contains(entry::PRESENT) {
+            let frame = ::arch::mm::phys::allocate().expect("Out of memory!");
+
+            Table::new_at_frame_mut(&frame).clear();
+
+            entry.set_frame(&frame);
+        }
+
+        entry.set_flags(entry::PRESENT | flags);
+
+        Table::new_at_frame_mut(&Frame::new(entry.address()))
     }
 
     pub fn alloc_next_level(&mut self, idx: usize) -> &mut Table {

@@ -57,12 +57,14 @@ pub fn init(mm_iter:        MemoryIter,
             kern_start:     PhysAddr,
             kern_end:       PhysAddr,
             mboot_start:    PhysAddr,
-            mboot_end:      PhysAddr) {
+            mboot_end:      PhysAddr,
+            modules_start:  PhysAddr,
+            modules_end:    PhysAddr) {
 
-    let iter = PhysMemIterator::new(mm_iter, kern_start, kern_end, mboot_start, mboot_end);
+    let iter = PhysMemIterator::new(mm_iter, kern_start, kern_end, mboot_start, mboot_end, modules_start, modules_end);
 
-    println!("Initialising physical memory 0x{:x} 0x{:x} 0x{:x} 0x{:x}",
-             kern_start, kern_end, mboot_start, mboot_end);
+    println!("Initialising physical memory 0x{:x} 0x{:x} 0x{:x} 0x{:x} 0x{:x} 0x{:x}",
+             kern_start, kern_end, mboot_start, mboot_end, modules_start, modules_end);
 
     let mut head: Option<PhysAddr> = None;
     let mut tail: Option<PhysAddr> = None;

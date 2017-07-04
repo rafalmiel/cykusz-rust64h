@@ -1,18 +1,18 @@
 pub mod memory;
 pub mod address;
 pub mod elf;
+pub mod modules;
 
 use util;
 
 #[repr(C)]
 pub struct Tag {
-    pub typ:        u16,
-    pub flags:      u16,
+    pub typ:        u32,
     pub size:       u32
 }
 
 pub struct TagIter {
-    pub current: *const Tag
+    pub current: *const Tag,
 }
 
 impl Iterator for TagIter {
@@ -20,7 +20,7 @@ impl Iterator for TagIter {
 
     fn next(&mut self) -> Option<&'static Tag> {
         match unsafe{&*self.current} {
-            &Tag {typ: 0, flags: 0, size: 8} => None,
+            &Tag {typ: 0, size: 8} => None,
             tag => {
                 self.current =
                     util::align(

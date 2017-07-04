@@ -203,7 +203,7 @@ impl Scheduler {
                 }
             }
         }
-        
+
         if to.is_none() {
             to = Some(0 as usize);
         }
@@ -241,7 +241,7 @@ pub fn task_unlocked() {
 pub fn create_kern_task(fun: fn()) {
     unsafe {
         SCHEDULER.add_task(fun);
-    } 
+    }
 }
 
 pub fn scheduler() {

@@ -12,6 +12,8 @@ pub fn init(mm_iter:        MemoryIter,
             kern_start:     PhysAddr,
             kern_end:       PhysAddr,
             mboot_start:    PhysAddr,
-            mboot_end:      PhysAddr) {
-    alloc::init(mm_iter, kern_start, kern_end, mboot_start, mboot_end);
+            mboot_end:      PhysAddr,
+            modules_start:  PhysAddr,
+            modules_end:    PhysAddr) {
+    alloc::init(mm_iter, kern_start, kern_end, mboot_start, mboot_end, modules_start, modules_end);
 }

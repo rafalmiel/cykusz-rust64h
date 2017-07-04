@@ -12,17 +12,17 @@ bits 32
 setup_page_tables:
 	; map first P4 entry to P3 table
 	mov eax, __p3_table
-	or eax, 0b111		; present + writable
+	or eax, 0b011		; present + writable
 	mov [__p4_table], eax
 
 	; Entry for higher half kernel
 	mov eax, __p3_table_high
-	or eax, 0b111 ; huge present + writable
+	or eax, 0b11 ; huge present + writable
 	mov [__p4_table + 510 * 8], eax
 
 	; Entry for physical mem kernel mapping at 0xffff800000000000
 	mov eax, __p3_table_phys
-	or eax, 0b111 ; huge present + writable
+	or eax, 0b011 ; huge present + writable
 	mov [__p4_table + 256 * 8], eax
 
 	; Recursive page table mapping
@@ -32,12 +32,12 @@ setup_page_tables:
 
 	;map first P3 entry to 1 GB huge page
 	mov eax, 0
-	or eax, 0b10000111		; Huge table + present + writable
+	or eax, 0b10000011		; Huge table + present + writable
 	mov [__p3_table], eax
 
 	;map first P3 high table entry to 1GB huge page
 	mov eax, 0
-	or eax, 0b10000111		; Huge table + present + writable
+	or eax, 0b10000011		; Huge table + present + writable
 	mov [__p3_table_high], eax
 
 	; Map all P3 table phys tables to 1 GB
@@ -45,7 +45,7 @@ setup_page_tables:
 .map_p3_table_phys:
 	mov eax, 0x40000000	; 1GB
 	mul ecx
-	or eax, 0b10000111	; Huge table + present + writable
+	or eax, 0b10000011	; Huge table + present + writable
 	mov [__p3_table_phys + ecx * 8], eax
 	inc ecx
 	cmp ecx, 512

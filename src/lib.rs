@@ -71,12 +71,6 @@ extern "C" {
 pub fn rust_main() {
     println!("In rust main!");
 
-    unsafe {
-        switch_to_user();
-
-        loop{}
-    }
-
     // for _ in 1..1 {
     //     let a = arch::mm::phys::allocate();
     //     let b = arch::mm::phys::allocate();
@@ -106,8 +100,15 @@ pub fn rust_main() {
     //     }
     // }
 
+
     {
         use alloc::boxed::Box;
+
+        unsafe {
+            asm!("xchg %bx, %bx");
+        }
+
+
         let mut heap_test = Box::new(42);
 
         Box::new(42);
@@ -126,11 +127,13 @@ pub fn rust_main() {
     println!("Allocated on heap!");
 
     vga::clear_screen();
+
+    unsafe {
+        switch_to_user();
+    }
+    loop{}
+
     arch::task::init();
-
-    arch::int::fire_timer();
-
-    loop {}
 }
 
 #[cfg(not(test))]

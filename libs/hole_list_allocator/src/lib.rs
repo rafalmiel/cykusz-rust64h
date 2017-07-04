@@ -33,7 +33,7 @@ struct Heap {
 
 lazy_static! {
     static ref HEAP: Mutex<Heap> = Mutex::new(unsafe {
-        Heap { 
+        Heap {
             size: HEAP_SIZE,
             list: LHeap::new(HEAP_START, HEAP_SIZE),
         }

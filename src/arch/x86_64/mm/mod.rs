@@ -73,7 +73,9 @@ pub fn init(mboot_info: &mboot2::Info) {
                virt_to_phys(mboot_info.kernel_start_addr()),
                virt_to_phys(mboot_info.kernel_end_addr()),
                physmap_to_phys(multiboot_addr),
-               physmap_to_phys(multiboot_addr as PhysAddr + mboot_info.size as PhysAddr));
+               physmap_to_phys(multiboot_addr as PhysAddr + mboot_info.size as PhysAddr),
+               mboot_info.modules_start_addr().unwrap_or_default(),
+               mboot_info.modules_end_addr().unwrap_or_default());
 
     virt::init(&mboot_info);
 }
