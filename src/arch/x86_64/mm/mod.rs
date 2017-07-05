@@ -69,6 +69,10 @@ pub fn init(mboot_info: &mboot2::Info) {
     println!("mboot2 start: 0x{:x}", physmap_to_phys(multiboot_addr));
     println!("mboot2 end  : 0x{:x}", physmap_to_phys(multiboot_addr as PhysAddr + mboot_info.size as PhysAddr));
 
+    unsafe {
+        asm!("xchg %bx, %bx");
+    }
+
     phys::init(mem.entries(),
                virt_to_phys(mboot_info.kernel_start_addr()),
                virt_to_phys(mboot_info.kernel_end_addr()),

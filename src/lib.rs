@@ -131,7 +131,6 @@ pub fn rust_main() {
     unsafe {
         switch_to_user();
     }
-    loop{}
 
     arch::task::init();
 }

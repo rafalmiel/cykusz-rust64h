@@ -58,8 +58,6 @@ switch_to_user:
 	push 0x1B
 	push rax
 	iretq
-in_user:
-	ret
 
 section .stack
 stack_bottom:

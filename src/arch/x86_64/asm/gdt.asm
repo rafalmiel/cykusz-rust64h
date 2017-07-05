@@ -32,14 +32,14 @@ gdt64:
 	dw 0			; Limit (low)
 	dw 0			; Base (low)
 	db 0			; Base (middle)
-	db 11111011b	; Access (Pr Privl=0 1 Ex Dc=0 RW Ac)
+	db 11111011b	; Access (Pr Privl=3 1 Ex Dc=0 RW Ac)
 	db 00100000b	; Flags (64bit) Limit (high)
 	db 0			; Base (high)
 .user_data: equ $ - gdt64
 	dw 0			; Limit (low)
 	dw 0			; Base (low)
 	db 0			; Base (middle)
-	db 11110011b	; Access (Pr Privl=0 1 Ex=0 Dc=0 RW Ac)
+	db 11110011b	; Access (Pr Privl=3 1 Ex=0 Dc=0 RW Ac)
 	db 00000000b	; Flags (64bit) Limit (high)
 	db 0			; Base (high)
 gdt64_tss: equ $ - gdt64

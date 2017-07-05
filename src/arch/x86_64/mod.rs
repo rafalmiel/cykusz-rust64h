@@ -33,6 +33,7 @@ pub extern "C" fn x86_64_rust_main(multiboot_addr: PhysAddr, stack_top: PhysAddr
 
         println!("Module start: 0x{:x}", mtag.mod_start);
         println!("Module end  : 0x{:x}", mtag.mod_end);
+        println!("Name: {}", mtag.name());
 
         unsafe {
             asm!("xchg %bx, %bx");
