@@ -5,7 +5,7 @@
 #![feature(naked_functions)]
 #![no_std]
 #![allow(dead_code)]
-#![feature(alloc, step_by, inclusive_range_syntax)]
+#![feature(alloc, iterator_step_by, inclusive_range_syntax)]
 
 extern crate hole_list_allocator;
 #[macro_use]
