@@ -4,11 +4,11 @@ use alloc::allocator::{Alloc, Layout, AllocErr};
 use core::ops::Deref;
 
 pub const HEAP_START: usize = 0xfffff80000000000;
-pub const HEAP_SIZE: usize = 1 * 4096; // 100 KiB / 25 pages
+pub const HEAP_SIZE: usize = 25 * 4096; // 100KB / 25 pages
 pub const HEAP_END: usize = HEAP_START + 4096 * 4096; // 4MB
 
 fn request_more_mem(from: *const u8, size: usize) {
-    //println!("Requesting more mem! 0x{:x} - size: 0x{:x}", from as usize, size);
+    println!("Requesting more mem! 0x{:x} - size: 0x{:x}", from as usize, size);
     for addr in (from as usize..from as usize + size).step_by(::arch::mm::PAGE_SIZE) {
         ::arch::mm::virt::map(addr);
     }

@@ -39,6 +39,9 @@ static HEAP: arch::mm::heap::LockedHeap = arch::mm::heap::LockedHeap::empty();
 
 pub fn initialise_heap()
 {
+    for addr in (arch::mm::heap::HEAP_START..(arch::mm::heap::HEAP_START + arch::mm::heap::HEAP_SIZE)).step_by(4096) {
+        arch::mm::virt::map(addr);
+    }
     unsafe {
         HEAP.0.lock().init(arch::mm::heap::HEAP_START, arch::mm::heap::HEAP_SIZE);
     }
