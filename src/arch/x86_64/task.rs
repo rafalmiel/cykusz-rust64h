@@ -1,5 +1,7 @@
 use super::int;
 
+use alloc::allocator::Alloc;
+
 //TODO:
 // - improve spin lock mutex - don't deschedule while holding a lock
 // - create proper scheduler with many processes
@@ -63,7 +65,7 @@ struct Task {
 impl Task {
     pub fn new(fun: fn ()) -> Task {
         unsafe {
-            let sp = ::alloc::heap::allocate(4096*4, 4096)
+            let sp = ::alloc::heap::Heap.alloc(::alloc::heap::Layout::from_size_align_unchecked(4096*4, 4096)).unwrap()
                 .offset(4096*4);
             *(sp.offset(-8) as *mut usize) = dead_task as usize;//task finished function
             *(sp.offset(-24) as *mut usize) = sp.offset(-8) as usize;                           //sp
@@ -95,7 +97,7 @@ impl Task {
         self.ctx = ContextMutPtr(::core::ptr::null_mut());
         self.locks = 0;
         unsafe {
-            ::alloc::heap::deallocate(self.stack_top as *mut u8, 4096*4, 4096);
+            ::alloc::heap::Heap.dealloc(self.stack_top as *mut u8, ::alloc::heap::Layout::from_size_align_unchecked(4096*4, 4096));
         }
         self.stack_top = 0;
     }

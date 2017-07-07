@@ -1,13 +1,16 @@
 #![feature(lang_items, asm, unique)]
 #![feature(const_fn)]
 #![feature(associated_type_defaults)]
-#![feature(heap_api)]
 #![feature(naked_functions)]
 #![no_std]
 #![allow(dead_code)]
-#![feature(alloc, iterator_step_by, inclusive_range_syntax)]
+#![feature(iterator_step_by, inclusive_range_syntax)]
+//alloc features
+#![feature(alloc)]
+#![feature(allocator_api)]
+#![feature(global_allocator)]
 
-extern crate hole_list_allocator;
+
 #[macro_use]
 extern crate alloc;
 
@@ -20,6 +23,8 @@ extern crate bitflags;
 #[macro_use]
 extern crate lazy_static;
 
+extern crate linked_list_allocator;
+
 #[macro_use]
 mod vga;
 
@@ -28,6 +33,16 @@ mod mm;
 
 mod mboot2;
 mod util;
+
+#[global_allocator]
+static HEAP: arch::mm::heap::LockedHeap = arch::mm::heap::LockedHeap::empty();
+
+pub fn initialise_heap()
+{
+    unsafe {
+        HEAP.0.lock().init(arch::mm::heap::HEAP_START, arch::mm::heap::HEAP_SIZE);
+    }
+}
 
 #[no_mangle]
 pub fn notify_alloc(_addr: *const u8) {
@@ -53,15 +68,6 @@ pub fn logln(l: &str) {
 #[no_mangle]
 pub extern "C" fn logn(n: usize) {
     print!("0x{:x}", n);
-}
-
-#[no_mangle]
-pub extern "C" fn request_more_mem(from: *const u8, size: usize) {
-    //println!("Requesting more mem! 0x{:x} - size: 0x{:x}", from as usize, size);
-    for addr in (from as usize..from as usize + size).step_by(arch::mm::PAGE_SIZE) {
-        //println!("MAP 0x{:x}", addr);
-        arch::mm::virt::map(addr);
-    }
 }
 
 extern "C" {

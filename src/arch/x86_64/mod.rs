@@ -14,7 +14,7 @@ use arch::mm::PhysAddr;
 use self::mm::phys_to_physmap;
 
 #[no_mangle]
-pub extern "C" fn x86_64_rust_main(multiboot_addr: PhysAddr, stack_top: PhysAddr) {
+pub extern "C" fn x86_64_rust_main(multiboot_addr: PhysAddr, _stack_top: PhysAddr) {
     unsafe {
         asm!("xchg %bx, %bx");
     }

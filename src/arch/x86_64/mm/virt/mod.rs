@@ -165,9 +165,10 @@ fn remap(mboot_info: &mboot2::Info) {
 
 pub fn init(mboot_info: &mboot2::Info) {
     remap(&mboot_info);
-
     //init heap
-    for addr in (0xfffff80000000000..(0xfffff80000000000 + 4*4096)).step_by(4096) {
+    for addr in (0xfffff80000000000..(0xfffff80000000000 + 1*4096)).step_by(4096) {
         map(addr);
     }
+
+    //::initialise_heap();
 }

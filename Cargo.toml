@@ -8,6 +8,7 @@ crate-type = ["staticlib"]
 
 [dependencies]
 rlibc = "*"
+linked_list_allocator = "*"
 spin = "*"
 
 [dependencies.x86]
@@ -15,9 +16,6 @@ version = "0.8.*"
 
 [dependencies.bitflags]
 version = "*"
-
-[dependencies.hole_list_allocator]
-path = "libs/hole_list_allocator"
 
 [dependencies.lazy_static]
 version = "*"
