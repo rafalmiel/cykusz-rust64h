@@ -83,4 +83,5 @@ pub fn init(mboot_info: &mboot2::Info) {
                mboot_info.modules_end_addr().unwrap_or_default());
 
     virt::init(&mboot_info);
+    heap::init();
 }

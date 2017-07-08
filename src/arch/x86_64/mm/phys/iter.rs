@@ -77,6 +77,8 @@ impl Iterator for PhysMemIterator {
 
         self.current = self.current + PAGE_SIZE;
 
+        // println!("0x{:x}", c);
+
         Some(c)
     }
 }

@@ -63,14 +63,21 @@ pub fn init(mm_iter:        MemoryIter,
 
     let iter = PhysMemIterator::new(mm_iter, kern_start, kern_end, mboot_start, mboot_end, modules_start, modules_end);
 
-    println!("Initialising physical memory 0x{:x} 0x{:x} 0x{:x} 0x{:x} 0x{:x} 0x{:x}",
+    println!("Initialising physical memory 0x{:x} 0x{:x} \n\t0x{:x} 0x{:x} \n\t0x{:x} 0x{:x}",
              kern_start, kern_end, mboot_start, mboot_end, modules_start, modules_end);
 
     let mut head: Option<PhysAddr> = None;
     let mut tail: Option<PhysAddr> = None;
     let mut max_cnt: u64 = 0;
 
+    //println!("Start iter!");
+
+    unsafe {
+        asm!("xchg %bx, %bx");
+    }
+
     for el in iter {
+        //println!("Start iter! {}", el);
         if let Some(p) = tail {
             let physmap = phys_to_physmap(p);
 

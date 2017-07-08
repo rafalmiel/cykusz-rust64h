@@ -165,7 +165,4 @@ fn remap(mboot_info: &mboot2::Info) {
 
 pub fn init(mboot_info: &mboot2::Info) {
     remap(&mboot_info);
-
-    //init heap
-    ::initialise_heap();
 }

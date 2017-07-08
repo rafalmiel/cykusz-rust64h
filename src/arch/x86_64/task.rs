@@ -1,9 +1,9 @@
 use super::int;
-
+use alloc::boxed::Box;
 use alloc::allocator::Alloc;
+use ::HEAP;
 
 //TODO:
-// - improve spin lock mutex - don't deschedule while holding a lock
 // - create proper scheduler with many processes
 // - cleanup api
 
@@ -59,13 +59,15 @@ struct Task {
     //4 to_delete
     state: u32,
     locks: u32,
+
+    //top of the stack, used to deallocate
     stack_top: usize,
 }
 
 impl Task {
     pub fn new(fun: fn ()) -> Task {
         unsafe {
-            let sp = ::alloc::heap::Heap.alloc(::alloc::heap::Layout::from_size_align_unchecked(4096*4, 4096)).unwrap()
+            let sp = HEAP.alloc(::alloc::heap::Layout::from_size_align_unchecked(4096*4, 4096)).unwrap()
                 .offset(4096*4);
             *(sp.offset(-8) as *mut usize) = dead_task as usize;//task finished function
             *(sp.offset(-24) as *mut usize) = sp.offset(-8) as usize;                           //sp
@@ -97,7 +99,7 @@ impl Task {
         self.ctx = ContextMutPtr(::core::ptr::null_mut());
         self.locks = 0;
         unsafe {
-            ::alloc::heap::Heap.dealloc(self.stack_top as *mut u8, ::alloc::heap::Layout::from_size_align_unchecked(4096*4, 4096));
+            HEAP.dealloc(self.stack_top as *mut u8, ::alloc::heap::Layout::from_size_align_unchecked(4096*4, 4096));
         }
         self.stack_top = 0;
     }
@@ -272,48 +274,36 @@ pub fn resched() {
 fn task_1() {
     let mut i: u32 = 0;
     for _ in 0..10 {
-        //println!("TASK 1 {}", i);
-        i += 1;
+        let mut heap_test = Box::new(42);
 
-        if i == ::core::u32::MAX {
-            i = 0;
-        }
+        //println!("Allocated in task 1");
     }
 }
 
 fn task_2() {
     let mut i: u32 = 0;
     for _ in 0..200 {
-        //println!("TASK 2 {}", i);
-        i += 1;
+        let mut heap_test = Box::new(42);
 
-        if i == ::core::u32::MAX {
-            i = 0;
-        }
+        //println!("Allocated in task 2");
     }
 }
 
 fn task_3() {
     let mut i: u32 = 0;
     for _ in 0..200 {
-        //println!("TASK 3 {}", i);
-        i += 1;
+        let mut heap_test = Box::new(42);
 
-        if i == ::core::u32::MAX {
-            i = 0;
-        }
+        //println!("Allocated in task 3");
     }
 }
 
 fn task_4() {
     let mut i: u32 = 0;
     for _ in 0..200 {
-        //println!("TASK 4 {}", i);
-        i += 1;
+        let mut heap_test = Box::new(42);
 
-        if i == ::core::u32::MAX {
-            i = 0;
-        }
+        //println!("Allocated in task 4");
     }
 }
 

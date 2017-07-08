@@ -91,6 +91,11 @@ pub extern "C" fn isr_handler(ctx: &InterruptContext) {
     end_of_interrupt();
 
     if ctx.int_id == 32 {
+        unsafe {
+            println!("INT TIMER!");
+            asm!("xchg %bx, %bx");
+        }
+        return;
         resched();
     }
 }

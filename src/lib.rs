@@ -34,18 +34,9 @@ mod mm;
 mod mboot2;
 mod util;
 
+//global allocator needs to be placed in root module? otherwise does not compile
 #[global_allocator]
-static HEAP: arch::mm::heap::LockedHeap = arch::mm::heap::LockedHeap::empty();
-
-pub fn initialise_heap()
-{
-    for addr in (arch::mm::heap::HEAP_START..(arch::mm::heap::HEAP_START + arch::mm::heap::HEAP_SIZE)).step_by(4096) {
-        arch::mm::virt::map(addr);
-    }
-    unsafe {
-        HEAP.0.lock().init(arch::mm::heap::HEAP_START, arch::mm::heap::HEAP_SIZE);
-    }
-}
+static mut HEAP: arch::mm::heap::LockedHeap = arch::mm::heap::LockedHeap::empty();
 
 #[no_mangle]
 pub fn notify_alloc(_addr: *const u8) {
@@ -133,13 +124,19 @@ pub fn rust_main() {
         *heap_test = 33;
     }
 
-    println!("Allocated on heap!");
+    println!("Allocated on heap! {}", 3);
+
+    //loop{}
 
     vga::clear_screen();
+
+    ::arch::int::fire_timer();
 
     unsafe {
         switch_to_user();
     }
+
+    loop{}
 
     arch::task::init();
 }
