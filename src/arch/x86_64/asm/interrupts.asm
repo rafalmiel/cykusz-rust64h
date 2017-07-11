@@ -75,9 +75,10 @@ extern isr_handler
 isr_common:
         pushAll
 
+        xchg bx, bx
         mov rdi, rsp            ; Pass pointer to interrupt data.
-
         call isr_handler
+
 
 global isr_return
 isr_return:

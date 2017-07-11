@@ -33,7 +33,9 @@ pub fn disable_pic() {
 }
 
 pub fn end_of_interrupt() {
+    disable_interrupts();
     ACPI.lock().lapic.end_of_interrupt();
+    enable_interrupts();
 }
 
 pub fn mask_interrupt(i: u32, mask: bool) {
@@ -75,11 +77,26 @@ pub fn init_acpi() {
 
 #[no_mangle]
 pub extern "C" fn isr_handler(ctx: &InterruptContext) {
+    //println!("int {}", ctx.int_id);
     match ctx.int_id {
-        80 => println!("INTERRUPTS WORKING {} 0x{:x}", ctx.int_id, ctx.error_code),
+        80 => {
+            unsafe {
+                asm!("xchg %bx, %bx");
+            }
+            println!("SYSCALL FROM USERSPACE");
+
+        }
         33 => println!("Keyboard interrupt detected"),
+        13 => {
+            println!("GPF");
+            disable_interrupts();
+            loop{}
+        }
         14 => {
-            println!("PAGE FAULT");
+            println!("PAGE FAULT 0x{:x}", ctx.error_code);
+            unsafe {
+                asm!("xchg %bx, %bx");
+            }
             loop{};
         },
         _ => {
@@ -92,10 +109,10 @@ pub extern "C" fn isr_handler(ctx: &InterruptContext) {
 
     if ctx.int_id == 32 {
         unsafe {
-            println!("INT TIMER!");
+            //println!("INT TIMER!");
             asm!("xchg %bx, %bx");
         }
-        return;
+        //return;
         resched();
     }
 }

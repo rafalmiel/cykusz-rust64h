@@ -64,7 +64,6 @@ pub extern "C" fn x86_64_rust_main(multiboot_addr: PhysAddr, stack_top: VirtAddr
 
     unsafe {
         TSS.rsp[0] = stack_top as u64;
-        TSS.ist[0] = stack_top as u64;
 
         let entry = &mut *((gdt64_tss + 8*5) as *mut GdtEntry);
 

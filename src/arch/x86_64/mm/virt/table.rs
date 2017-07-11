@@ -67,7 +67,8 @@ impl Table {
 
             entry.set_frame_flags(&frame, flags | entry::PRESENT);
         } else {
-            panic!("Failed to alloc new frame..");
+            let frame = Frame::new(entry.address());
+            entry.set_frame_flags(&frame, flags | entry::PRESENT);
         }
     }
 

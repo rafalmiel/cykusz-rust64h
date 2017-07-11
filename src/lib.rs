@@ -126,17 +126,11 @@ pub fn rust_main() {
 
     println!("Allocated on heap! {}", 3);
 
-    //loop{}
-
-    vga::clear_screen();
-
-    ::arch::int::fire_timer();
-
     unsafe {
-        switch_to_user();
+        asm!("xchg %bx, %bx");
     }
 
-    loop{}
+    vga::clear_screen();
 
     arch::task::init();
 }

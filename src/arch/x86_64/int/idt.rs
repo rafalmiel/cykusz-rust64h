@@ -42,13 +42,24 @@ impl Idt {
 
     fn set_gate(&mut self, num: usize, handler: *const u8) {
         use x86::shared::segmentation::cs;
-        self.table[num] =
-            IdtEntry::new(
-                VAddr::from_usize(handler as usize),
-                cs().bits(),
-                PrivilegeLevel::Ring0,
-                false
-            );
+        if num != 80 {
+            self.table[num] =
+                IdtEntry::new(
+                    VAddr::from_usize(handler as usize),
+                    cs().bits(),
+                    PrivilegeLevel::Ring0,
+                    false
+                );
+        } else {
+            self.table[num] =
+                IdtEntry::new(
+                    VAddr::from_usize(handler as usize),
+                    cs().bits(),
+                    PrivilegeLevel::Ring3,
+                    false
+                );
+        }
+
     }
 }
 

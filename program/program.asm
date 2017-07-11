@@ -1,3 +1,6 @@
 BITS 64
+loop:
+xchg bx, bx
 mov rax, 0xDEADBEEF
-jmp $
+int 80
+jmp loop

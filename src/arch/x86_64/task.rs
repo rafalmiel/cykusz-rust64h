@@ -85,6 +85,28 @@ impl Task {
         }
     }
 
+    pub fn new_user() -> Task {
+        use arch::mm::virt;
+        unsafe {
+            virt::map_flags(0x600000, virt::entry::USER | virt::entry::WRITABLE);
+            let sp = ((0x600000 + 4096) as *mut u8);
+            //let cd = virt::map_flags(0x400000, virt::entry::USER);
+            *(sp.offset(-16) as *mut usize) = 0x23;
+            *(sp.offset(-24) as *mut usize) = sp.offset(-8) as usize;                           //sp
+            *(sp.offset(-32) as *mut usize) = 0x200;                                            //rflags enable interrupts
+            *(sp.offset(-40) as *mut usize) = 0x1b;//cs
+            *(sp.offset(-48) as *mut usize) = 0x400000;                                    //rip
+            let mut ctx = sp.offset(-(::core::mem::size_of::<Context>() as isize + 48 + 11*8)) as *mut Context;
+            (*ctx).rip = isr_return as usize;
+            Task {
+                ctx: ContextMutPtr(ctx),
+                state: 2,
+                locks: 0,
+                stack_top: sp as usize - 4096,
+            }
+        }
+    }
+
     pub const fn empty() -> Task {
         Task {
             ctx: ContextMutPtr(::core::ptr::null_mut()),
@@ -143,6 +165,15 @@ impl Scheduler {
         for i in 0..32 {
             if self.tasks[i].state == 0 {
                 self.tasks[i] = Task::new(fun);
+                return;
+            }
+        }
+    }
+
+    pub fn add_user_task(&mut self) {
+        for i in 0..32 {
+            if self.tasks[i].state == 0 {
+                self.tasks[i] = Task::new_user();
                 return;
             }
         }
@@ -248,6 +279,12 @@ pub fn create_kern_task(fun: fn()) {
     }
 }
 
+pub fn create_user_task() {
+    unsafe {
+        SCHEDULER.add_user_task();
+    }
+}
+
 pub fn scheduler() {
     loop {
         unsafe {
@@ -273,20 +310,22 @@ pub fn resched() {
 
 fn task_1() {
     let mut i: u32 = 0;
-    for _ in 0..10 {
-        let mut heap_test = Box::new(42);
-
-        //println!("Allocated in task 1");
+    loop {
+        println!("KERNEL TASK 1 {}", i);
+        i = i+1;
     }
+
+
 }
 
 fn task_2() {
     let mut i: u32 = 0;
-    for _ in 0..200 {
-        let mut heap_test = Box::new(42);
-
-        //println!("Allocated in task 2");
+    loop {
+        println!("KERNEL TASK 2 {}", i);
+        i = i+1;
     }
+
+
 }
 
 fn task_3() {
@@ -313,8 +352,7 @@ pub fn init() {
     }
     create_kern_task(task_1);
     create_kern_task(task_2);
-    create_kern_task(task_3);
-    create_kern_task(task_4);
+    create_user_task();
 
     int::enable_interrupts();
     int::fire_timer();
