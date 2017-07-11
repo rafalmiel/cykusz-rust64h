@@ -33,9 +33,7 @@ pub fn disable_pic() {
 }
 
 pub fn end_of_interrupt() {
-    disable_interrupts();
-    ACPI.lock().lapic.end_of_interrupt();
-    enable_interrupts();
+    ACPI.lock_irq().lapic.end_of_interrupt();
 }
 
 pub fn mask_interrupt(i: u32, mask: bool) {
