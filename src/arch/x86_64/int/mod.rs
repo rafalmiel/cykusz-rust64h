@@ -33,7 +33,7 @@ pub fn disable_pic() {
 }
 
 pub fn end_of_interrupt() {
-    ACPI.lock_irq().lapic.end_of_interrupt();
+    ACPI.lock().lapic.end_of_interrupt();
 }
 
 pub fn mask_interrupt(i: u32, mask: bool) {
@@ -74,7 +74,7 @@ pub fn init_acpi() {
 }
 
 #[no_mangle]
-pub extern "C" fn isr_handler(ctx: &InterruptContext) {
+pub extern "C" fn isr_handler(ctx: &InterruptContext, retaddr: usize) {
     //println!("int {}", ctx.int_id);
     match ctx.int_id {
         80 => {
@@ -91,7 +91,7 @@ pub extern "C" fn isr_handler(ctx: &InterruptContext) {
             loop{}
         }
         14 => {
-            println!("PAGE FAULT 0x{:x}", ctx.error_code);
+            println!("PAGE FAULT 0x{:x}, addr: 0x{:x}", ctx.error_code, retaddr);
             unsafe {
                 asm!("xchg %bx, %bx");
             }
@@ -106,10 +106,6 @@ pub extern "C" fn isr_handler(ctx: &InterruptContext) {
     end_of_interrupt();
 
     if ctx.int_id == 32 {
-        unsafe {
-            //println!("INT TIMER!");
-            asm!("xchg %bx, %bx");
-        }
         //return;
         resched();
     }

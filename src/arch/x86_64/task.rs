@@ -85,6 +85,27 @@ impl Task {
         }
     }
 
+    pub fn new_sched(fun: fn ()) -> Task {
+        unsafe {
+            let sp = HEAP.alloc(::alloc::heap::Layout::from_size_align_unchecked(4096*4, 4096)).unwrap()
+                .offset(4096*4);
+            *(sp.offset(-8) as *mut usize) = dead_task as usize;//task finished function
+            *(sp.offset(-24) as *mut usize) = sp.offset(-8) as usize;                           //sp
+            *(sp.offset(-32) as *mut usize) = 0;                                            //rflags enable interrupts
+            *(sp.offset(-40) as *mut usize) = ::x86::shared::segmentation::cs().bits() as usize;//cs
+            *(sp.offset(-48) as *mut usize) = fun as usize;                                     //rip
+            let mut ctx = sp.offset(-(::core::mem::size_of::<Context>() as isize + 48 + 11*8)) as *mut Context;
+            (*ctx).rip = isr_return as usize;
+            Task {
+                ctx: ContextMutPtr(ctx),
+                state: 2,
+                locks: 0,
+                stack_top: sp as usize - 4096*4,
+            }
+        }
+    }
+
+
     pub fn new_user() -> Task {
         use arch::mm::virt;
         unsafe {
@@ -156,7 +177,7 @@ impl Scheduler {
     }
 
     pub fn init(&mut self) {
-        self.sched_task = Task::new(scheduler);
+        self.sched_task = Task::new_sched(scheduler);
         self.tasks[0].state = 1;
         self.init = true;
     }
@@ -301,11 +322,9 @@ pub fn dead_task() {
 }
 
 pub fn resched() {
-    int::disable_interrupts();
     unsafe {
         SCHEDULER.resched();
     }
-    int::enable_interrupts();
 }
 
 fn task_1() {
@@ -354,6 +373,7 @@ pub fn init() {
     create_kern_task(task_2);
     create_user_task();
 
-    int::enable_interrupts();
+
     int::fire_timer();
+    int::enable_interrupts();
 }
