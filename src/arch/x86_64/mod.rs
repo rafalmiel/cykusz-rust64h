@@ -1,7 +1,7 @@
 pub mod cpuio;
 pub mod mm;
 pub mod int;
-pub mod apic;
+pub mod acpi;
 pub mod pic;
 pub mod task;
 pub mod sync;

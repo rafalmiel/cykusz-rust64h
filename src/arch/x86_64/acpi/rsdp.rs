@@ -1,6 +1,6 @@
 use core::mem::size_of;
 
-use arch::apic;
+use arch::acpi;
 
 #[repr(packed, C)]
 pub struct Rsdp {
@@ -21,7 +21,7 @@ impl Rsdp {
             println!("Checksum: 0x{:x}", self.checksum);
             println!("Revision: {}", self.revision);
 
-            apic::util::checksum(self as *const _ as *const u8, size_of::<Rsdp>() as isize)
+            acpi::util::checksum(self as *const _ as *const u8, size_of::<Rsdp>() as isize)
         }
     }
 
@@ -59,7 +59,7 @@ impl Rsdp {
             }
         }
 
-        println!("Rsdp not found on E0_000");
+        println!("Rsdp not found on 0xE0000");
 
         None
     }

@@ -2,7 +2,7 @@ pub mod idt;
 
 use arch::sync::Mutex;
 use arch::pic;
-use arch::apic::Acpi;
+use arch::acpi::Acpi;
 use arch::task::resched;
 
 static PICS: Mutex<pic::ChainedPics> = Mutex::new(unsafe { pic::ChainedPics::new(0x20, 0x28) });
@@ -114,7 +114,7 @@ pub fn init() {
 
     IDT.lock().init();
 
-    PICS.lock().init();
+    //PICS.lock().init();
 
     disable_pic();
 

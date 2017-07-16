@@ -4,10 +4,10 @@ mod util;
 mod lapic;
 mod ioapic;
 
-use arch::apic::rsdp::Rsdp;
-use arch::apic::rsdt::Rsdt;
-use arch::apic::lapic::LApic;
-use arch::apic::ioapic::IOApic;
+use arch::acpi::rsdp::Rsdp;
+use arch::acpi::rsdt::Rsdt;
+use arch::acpi::lapic::LApic;
+use arch::acpi::ioapic::IOApic;
 use arch::mm::PhysAddr;
 
 use arch::mm::phys_to_physmap;

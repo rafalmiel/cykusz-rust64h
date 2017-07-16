@@ -33,7 +33,7 @@ impl PhysMemIterator {
         let ent = mm_iter.next().expect("Memory iterator needs at least one value");
 
         PhysMemIterator {
-            current:        0x100000 as PhysAddr,
+            current:        ent.base_addr as PhysAddr,
             mm_iter:        mm_iter,
             mm_start:       ent.base_addr as PhysAddr,
             mm_end:         ent.base_addr as PhysAddr + ent.length as PhysAddr,
@@ -58,30 +58,25 @@ impl Iterator for PhysMemIterator {
     type Item = PhysAddr;
 
     fn next(&mut self) -> Option<PhysAddr> {
-        let c = self.current;
+        loop {
+            let c = self.current;
 
-        if c >= self.mm_end {
-            if let Some(e) = self.mm_iter.next() {
-                self.mm_start = e.base_addr as PhysAddr;
-                self.mm_end = e.base_addr as PhysAddr + e.length as usize;
-                if self.current <= self.mm_start {
+            if c >= self.mm_end {
+                if let Some(e) = self.mm_iter.next() {
+                    self.mm_start = e.base_addr as PhysAddr;
+                    self.mm_end = e.base_addr as PhysAddr + e.length as usize;
                     self.current = self.mm_start;
+                    continue;
+                } else {
+                    return None;
                 }
-                return self.next();
-            } else {
-                return None;
+            }
+
+            self.current += PAGE_SIZE;
+
+            if self.is_valid(c) {
+                return Some(c);
             }
         }
-
-        if !self.is_valid(c) {
-            self.current = self.current + PAGE_SIZE;
-            return self.next();
-        }
-
-        self.current = self.current + PAGE_SIZE;
-
-        // println!("0x{:x}", c);
-
-        Some(c)
     }
 }
