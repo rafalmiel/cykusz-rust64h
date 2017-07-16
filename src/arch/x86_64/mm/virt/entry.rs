@@ -39,6 +39,10 @@ impl Entry {
         self.bits
     }
 
+    pub fn set_raw(&mut self, bits: usize) {
+        self.bits = bits;
+    }
+
     pub fn is_unused(&self) -> bool {
         self.bits == 0
     }

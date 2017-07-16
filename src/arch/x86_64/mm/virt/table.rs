@@ -13,7 +13,7 @@ pub enum Level3 {}
 pub enum Level2 {}
 pub enum Level1 {}
 
-pub trait HierarchicalLevel: TableLevel {
+pub trait NotLastLevel: TableLevel {
     type NextLevel: TableLevel;
 }
 pub trait TableLevel {}
@@ -56,6 +56,14 @@ where
 
     pub fn new<'a>(frame: &Frame) -> &'a Table<L> {
         Table::<L>::new_at_frame(frame)
+    }
+
+    pub fn entry_at(&self, idx: usize) -> &Entry {
+        return &self.entries[idx]
+    }
+
+    pub fn set_entry(&mut self, idx: usize, entry: &Entry) {
+        self.entries[idx].set_raw(entry.raw());
     }
 }
 

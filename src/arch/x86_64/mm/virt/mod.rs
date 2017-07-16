@@ -14,16 +14,47 @@ fn p4_table_addr() -> MappedAddr {
     }
 }
 
-pub fn map_flags(virt: VirtAddr, flags: entry::Entry) {
+fn table_map_flags(table: &mut P4Table, addr: VirtAddr, flags: entry::Entry) {
+    let page = page::Page::new(addr);
+
+    table.alloc_next_level(page.p4_index())
+         .alloc_next_level(page.p3_index())
+         .alloc_next_level(page.p2_index())
+         .alloc_set_flags(page.p1_index(), flags);
+}
+
+fn table_map_frame_flags(table: &mut P4Table, virt: VirtAddr, phys: PhysAddr, flags: entry::Entry) {
     let page = page::Page::new(virt);
 
-    P4Table::new_mut(
-        &Frame::new(p4_table_addr())
-    )
-        .alloc_next_level(page.p4_index())
-        .alloc_next_level(page.p3_index())
-        .alloc_next_level(page.p2_index())
-        .alloc_set_flags(page.p1_index(), flags);
+    table.alloc_next_level(page.p4_index())
+         .alloc_next_level(page.p3_index())
+         .alloc_next_level(page.p2_index())
+         .set_flags(page.p1_index(), &Frame::new(phys), flags);
+}
+
+fn table_map_frame(table: &mut P4Table, virt: VirtAddr, phys: PhysAddr) {
+    let page = page::Page::new(virt);
+
+    table.alloc_next_level(page.p4_index())
+         .alloc_next_level(page.p3_index())
+         .alloc_next_level(page.p2_index())
+         .set(page.p1_index(), &Frame::new(phys));
+}
+
+fn table_map_hugepage_frame(table: &mut P4Table, virt: VirtAddr, phys: PhysAddr) {
+    let page = page::Page::new(virt);
+
+    table.alloc_next_level(page.p4_index())
+          .alloc_next_level(page.p3_index())
+          .set_hugepage(page.p2_index(), &Frame::new(phys));
+}
+
+pub fn map_flags(virt: VirtAddr, flags: entry::Entry) {
+    table_map_flags(
+        P4Table::new_mut(&Frame::new(p4_table_addr())),
+        virt,
+        flags
+    );
 
     unsafe {
         ::x86::shared::tlb::flush(virt);
@@ -56,15 +87,12 @@ pub fn unmap(virt: VirtAddr) {
 
 #[allow(unused)]
 pub fn map_to(virt: VirtAddr, phys: PhysAddr) {
-    let page = page::Page::new(virt);
 
-    P4Table::new_mut(
-        &Frame::new(p4_table_addr())
-    )
-        .alloc_next_level(page.p4_index())
-        .alloc_next_level(page.p3_index())
-        .alloc_next_level(page.p2_index())
-        .set(page.p1_index(), &Frame::new(phys));
+    table_map_frame(
+        P4Table::new_mut(&Frame::new(p4_table_addr())),
+        virt,
+        phys
+    );
 
     unsafe {
         ::x86::shared::tlb::flush(virt);
@@ -115,23 +143,13 @@ fn remap(mboot_info: &mboot2::Info) {
         println!("from 0x{:x} to 0x{:x} with flags 0x{:x}", s, e, flags.raw());
 
         for addr in (s..e).step_by(PAGE_SIZE) {
-            let p = page::Page::new(phys_to_virt(addr));
-            let f = Frame::new(addr);
-
-            table.alloc_next_level(p.p4_index())
-                 .alloc_next_level(p.p3_index())
-                 .alloc_next_level(p.p2_index())
-                 .set_flags(p.p1_index(), &f, flags);
+            table_map_frame_flags(table, phys_to_virt(addr), addr, flags);
         }
     }
 
-    for idx in 0..8192 {
-        let physmap_page = page::Page::new(0xffff800000000000 + idx * 1024*1024*2);
-
-        table.alloc_next_level(physmap_page.p4_index())
-             .alloc_next_level(physmap_page.p3_index())
-             .set_hugepage(physmap_page.p2_index(), &Frame::new(idx * 1024*1024*2));
-    }
+    // Set physmap from previous mapping
+    let orig = P4Table::new_mut(&Frame::new(p4_table_addr()));
+    table.set_entry(256, orig.entry_at(256));
 
     unsafe {
         println!("Writing cr3 with value 0x{:x}", frame.address());
