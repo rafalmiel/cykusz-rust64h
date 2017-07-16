@@ -4,7 +4,7 @@ mod table;
 
 use arch::mm::*;
 use arch::mm::phys::Frame;
-use self::table::Table;
+use self::table::*;
 
 const PAGE_SIZE: usize = 4096;
 
@@ -16,18 +16,17 @@ fn p4_table_addr() -> MappedAddr {
 
 pub fn map_flags(virt: VirtAddr, flags: entry::Entry) {
     let page = page::Page::new(virt);
-    let p4_addr = physmap_to_phys(p4_table_addr());
 
-    Table::new_at_frame_mut(
-        &Frame::new(p4_addr)
+    P4Table::new_mut(
+        &Frame::new(p4_table_addr())
     )
-        .alloc_next_level_flags(page.p4_index(), flags)
-        .alloc_next_level_flags(page.p3_index(), flags)
-        .alloc_next_level_flags(page.p2_index(), flags)
+        .alloc_next_level(page.p4_index())
+        .alloc_next_level(page.p3_index())
+        .alloc_next_level(page.p2_index())
         .alloc_set_flags(page.p1_index(), flags);
 
     unsafe {
-        ::x86::shared::tlb::flush(p4_addr);
+        ::x86::shared::tlb::flush(virt);
     }
 }
 
@@ -37,10 +36,9 @@ pub fn map(virt: VirtAddr) {
 
 pub fn unmap(virt: VirtAddr) {
     let page = page::Page::new(virt);
-    let p4_addr = physmap_to_phys(p4_table_addr());
 
-    if let Some(p1) = Table::new_at_frame_mut(
-        &Frame::new(p4_addr)
+    if let Some(p1) = Table::<Level4>::new_mut(
+        &Frame::new(p4_table_addr())
     )
         .next_level_mut(page.p4_index())
         .and_then(|t| t.next_level_mut(page.p3_index())
@@ -49,7 +47,7 @@ pub fn unmap(virt: VirtAddr) {
         p1.unmap(page.p1_index());
 
         unsafe {
-            ::x86::shared::tlb::flush_all();
+            ::x86::shared::tlb::flush(virt);
         };
     } else {
         println!("ERROR: virt addr 0x{:x} cannot be unmapped", virt);
@@ -59,10 +57,9 @@ pub fn unmap(virt: VirtAddr) {
 #[allow(unused)]
 pub fn map_to(virt: VirtAddr, phys: PhysAddr) {
     let page = page::Page::new(virt);
-    let p4_addr = physmap_to_phys(p4_table_addr());
 
-    Table::new_at_frame_mut(
-        &Frame::new(p4_addr)
+    P4Table::new_mut(
+        &Frame::new(p4_table_addr())
     )
         .alloc_next_level(page.p4_index())
         .alloc_next_level(page.p3_index())
@@ -70,23 +67,7 @@ pub fn map_to(virt: VirtAddr, phys: PhysAddr) {
         .set(page.p1_index(), &Frame::new(phys));
 
     unsafe {
-        ::x86::shared::tlb::flush(p4_addr);
-    }
-}
-
-#[allow(unused)]
-pub fn map_to_1gb(virt: VirtAddr, phys: PhysAddr) {
-    let page = page::Page::new(virt);
-    let p4_addr = physmap_to_phys(p4_table_addr());
-
-    Table::new_at_frame_mut(
-        &Frame::new(p4_addr)
-    )
-        .alloc_next_level(page.p4_index())
-        .set_hugepage(page.p3_index(), &Frame::new(phys));
-
-    unsafe {
-        ::x86::shared::tlb::flush(p4_addr);
+        ::x86::shared::tlb::flush(virt);
     }
 }
 
@@ -108,7 +89,7 @@ fn enable_write_protect_bit() {
 
 fn remap(mboot_info: &mboot2::Info) {
     let frame = ::arch::mm::phys::allocate().expect("Out of mem!");
-    let table = Table::new_at_frame_mut(&frame);
+    let table = P4Table::new_mut(&frame);
 
     table.clear();
 
