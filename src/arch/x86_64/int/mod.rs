@@ -106,7 +106,6 @@ pub extern "C" fn isr_handler(ctx: &InterruptContext, retaddr: usize) {
     end_of_interrupt();
 
     if ctx.int_id == 32 {
-        //return;
         resched();
     }
 }

@@ -373,7 +373,6 @@ pub fn init() {
     create_kern_task(task_2);
     create_user_task();
 
-
     int::fire_timer();
     int::enable_interrupts();
 }

@@ -17,6 +17,8 @@ start:
 	mov esp, boot_stack_top
 	mov edi, ebx       ;Multiboot address
 
+	push edi
+
 	call test_multiboot
 	call test_cpuid
 	call test_long_mode
@@ -24,7 +26,11 @@ start:
 	call setup_page_tables
 	call enable_paging
 
+
+	xchg bx, bx
 	lgdt [gdt64.pointer]
+
+	pop edi
 
 	jmp gdt64.code:long_mode_start
 

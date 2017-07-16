@@ -21,7 +21,7 @@ impl Pic {
     }
 
     unsafe fn end_of_interrupt(&mut self) {
-        println!("EOI 0x{:x}", self.offset);
+        //println!("EOI 0x{:x}", self.offset);
         self.command.write(CMD_END_OF_INTERRUPT);
     }
 }

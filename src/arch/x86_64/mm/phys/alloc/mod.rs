@@ -43,7 +43,6 @@ pub fn allocate() -> Option<mm::Frame> {
 }
 
 pub fn deallocate(frame: &mm::Frame) {
-    println!("Deallocating 0x{:x}", frame.address());
     let mut list = PHYS_LIST.lock();
 
     unsafe {
@@ -77,7 +76,9 @@ pub fn init(mm_iter:        MemoryIter,
     }
 
     for el in iter {
-        //println!("Start iter! {}", el);
+        unsafe {
+            asm!("xchg %bx, %bx");
+        }
         if let Some(p) = tail {
             let physmap = phys_to_physmap(p);
 

@@ -144,11 +144,12 @@ fn remap(mboot_info: &mboot2::Info) {
         }
     }
 
-    for idx in 0..512 {
-        let physmap_page = page::Page::new(0xffff800000000000 + idx * 1024*1024*1024);
+    for idx in 0..8192 {
+        let physmap_page = page::Page::new(0xffff800000000000 + idx * 1024*1024*2);
 
         table.alloc_next_level(physmap_page.p4_index())
-             .set_hugepage(physmap_page.p3_index(), &Frame::new(idx * 1024*1024*1024));
+             .alloc_next_level(physmap_page.p3_index())
+             .set_hugepage(physmap_page.p2_index(), &Frame::new(idx * 1024*1024*2));
     }
 
     unsafe {

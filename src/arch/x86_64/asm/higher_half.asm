@@ -63,5 +63,5 @@ switch_to_user:
 
 section .stack
 stack_bottom:
-	times 4096*4 db 0
+	times 4096*16 db 0
 stack_top:

@@ -62,7 +62,7 @@ impl LApic {
     pub fn fire_timer(&mut self) {
         self.reg_write(REG_TIMDIV, 0b1010);
         self.reg_write(REG_TIM, 32 | 0x20000);
-        self.reg_write(REG_TIMINIT, 0x1000);
+        self.reg_write(REG_TIMINIT, 0x100000);
     }
 
     pub fn end_of_interrupt(&self) {

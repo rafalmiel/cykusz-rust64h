@@ -33,7 +33,7 @@ impl PhysMemIterator {
         let ent = mm_iter.next().expect("Memory iterator needs at least one value");
 
         PhysMemIterator {
-            current:        ent.base_addr as PhysAddr,
+            current:        0x100000 as PhysAddr,
             mm_iter:        mm_iter,
             mm_start:       ent.base_addr as PhysAddr,
             mm_end:         ent.base_addr as PhysAddr + ent.length as PhysAddr,
@@ -49,7 +49,8 @@ impl PhysMemIterator {
     fn is_valid(&self, addr: PhysAddr) -> bool {
         not_contains(addr, self.kern_start, self.kern_end) &&
         not_contains(addr, self.mboot_start, self.mboot_end) &&
-        not_contains(addr, self.modules_start, self.modules_end)
+        not_contains(addr, self.modules_start, self.modules_end) &&
+        addr >= 0x100000
     }
 }
 
@@ -63,7 +64,9 @@ impl Iterator for PhysMemIterator {
             if let Some(e) = self.mm_iter.next() {
                 self.mm_start = e.base_addr as PhysAddr;
                 self.mm_end = e.base_addr as PhysAddr + e.length as usize;
-                self.current = self.mm_start;
+                if self.current <= self.mm_start {
+                    self.current = self.mm_start;
+                }
                 return self.next();
             } else {
                 return None;

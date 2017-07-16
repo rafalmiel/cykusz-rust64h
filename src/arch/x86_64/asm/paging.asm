@@ -9,6 +9,45 @@ bits 32
 ; kernel code mem start 0xffffff0000000000
 ; kernel heap mem start 0xfffff80000000000
 
+; ecx : offset
+; ebx : page addr
+map_2g_pages:
+	push eax
+	push ebx
+	push ecx
+	push edx
+
+	mov ebx, [esp + 4*5]
+	mov ecx, [esp + 4*6]
+
+	mov edx, 0
+.map:
+	mov eax, 0x200000
+	push edx
+	mul edx
+	pop edx
+
+	add eax, ecx
+	or eax, 0b10000011
+
+	mov [ebx + edx * 8], eax
+
+	push eax
+	mov eax, [esp + 4*8]
+	mov [ebx + edx * 8 + 4], eax
+	pop eax
+
+	inc edx
+	cmp edx, 512
+	jne .map
+
+	pop edx
+	pop ecx
+	pop ebx
+	pop eax
+
+	ret
+
 setup_page_tables:
 	; map first P4 entry to P3 table
 	mov eax, __p3_table
@@ -17,40 +56,59 @@ setup_page_tables:
 
 	; Entry for higher half kernel
 	mov eax, __p3_table_high
-	or eax, 0b11 ; huge present + writable
+	or eax, 0b11 ; present + writable
 	mov [__p4_table + 510 * 8], eax
 
 	; Entry for physical mem kernel mapping at 0xffff800000000000
 	mov eax, __p3_table_phys
-	or eax, 0b011 ; huge present + writable
+	or eax, 0b011 ; present + writable
 	mov [__p4_table + 256 * 8], eax
 
-	; Recursive page table mapping
-;	mov eax, p4_table
-;	or eax, 0b11 ; present + writable
-;	mov [p4_table + 511 * 8], eax
-
-	;map first P3 entry to 1 GB huge page
-	mov eax, 0
-	or eax, 0b10000011		; Huge table + present + writable
+	mov eax, __p2_table
+	or eax, 0b11
 	mov [__p3_table], eax
 
-	;map first P3 high table entry to 1GB huge page
-	mov eax, 0
-	or eax, 0b10000011		; Huge table + present + writable
+	mov eax, __p2_table_high
+	or eax, 0b11		; present + present + writable
 	mov [__p3_table_high], eax
 
-	; Map all P3 table phys tables to 1 GB
-	mov ecx, 0
-.map_p3_table_phys:
-	mov eax, 0x40000000	; 1GB
-	mul ecx
-	or eax, 0b10000011	; Huge table + present + writable
-	mov [__p3_table_phys + ecx * 8], eax
-	inc ecx
-	cmp ecx, 512
-	jne .map_p3_table_phys
+	push 0
+	push 0
+	push __p2_table
+	call map_2g_pages
+	add esp, 4*3
 
+	push 0
+	push 0
+	push __p2_table_high
+	call map_2g_pages
+	add esp, 4*3
+
+	mov ecx, 0
+map_p3_table_phys:
+	mov eax, 0x40000000
+	mul ecx
+
+	push edx
+	push eax
+
+	mov ebx, __p2_table_phys
+	mov eax, ecx
+	mov edx, 4096
+	mul edx
+	add ebx, eax
+	push ebx
+	or ebx, 0b11
+
+	mov [__p3_table_phys + 8*ecx], ebx
+
+	xchg bx, bx
+	call map_2g_pages
+	add esp, 4*3
+
+	inc ecx
+	cmp ecx, 16
+	jne map_p3_table_phys
 	ret
 
 enable_paging:
@@ -75,6 +133,7 @@ enable_paging:
 	or eax, 1 << 16
 	mov cr0, eax
 
+	xchg bx, bx
 	ret
 
 section .bss
@@ -83,7 +142,13 @@ __p4_table:
 	resb 4096
 __p3_table:
 	resb 4096
+__p3_table_phys:
+	resb 4096
 __p3_table_high:
 	resb 4096
-__p3_table_phys:
+__p2_table:
+	resb 4096
+__p2_table_phys:
+    resb 16*4096
+__p2_table_high:
 	resb 4096

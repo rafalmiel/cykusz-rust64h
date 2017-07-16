@@ -13,7 +13,6 @@ use arch::mm::PhysAddr;
 use arch::mm::phys_to_physmap;
 
 pub struct Acpi {
-    rsdp: Option<&'static Rsdp>,
     pub rsdt: Rsdt,
     pub lapic: LApic,
     pub ioapic: IOApic
@@ -21,28 +20,32 @@ pub struct Acpi {
 
 impl Acpi {
     pub const fn new() -> Acpi {
-        Acpi { rsdp: None, rsdt: Rsdt::new(), lapic: LApic::new(), ioapic: IOApic::new() }
+        Acpi { rsdt: Rsdt::new(), lapic: LApic::new(), ioapic: IOApic::new() }
     }
 
     pub fn init(&mut self) {
         unsafe {
-            self.rsdp = Rsdp::find();
+            let rsdp = Rsdp::find().expect("RSDP Not found!");
 
-            if let Some(r) = self.rsdp {
-                self.rsdt.init(phys_to_physmap(r.rsdt_address as PhysAddr));
+            println!("Found Rsdp!");
 
-                if let Some(lapic_base) = self.rsdt.local_controller_address() {
-                    self.lapic.init(lapic_base);
-                    println!("LApic initialised!");
+            self.rsdt.init(phys_to_physmap(rsdp.rsdt_address as PhysAddr));
 
-                    if let Some(ioapic_base) = self.rsdt.ioapic_address() {
-                        self.ioapic.init(ioapic_base);
-                        println!("IOApic initialised! id: {}, ident: {}, entries: {}, version: {}",
+            let lapic_base = self.rsdt.local_controller_address().expect("LAPIC address not found!");
+
+            println!("Initialised lapic_base");
+
+            self.lapic.init(lapic_base);
+
+            let ioapic_base = self.rsdt.ioapic_address().expect("IOApic address not found!");
+
+            println!("Initialised ioapic_base!");
+
+            self.ioapic.init(ioapic_base);
+
+            println!("IOApic initialised! id: {}, ident: {}, entries: {}, version: {}",
                             self.ioapic.id(), self.ioapic.identification(),
                             self.ioapic.max_red_entry() + 1, self.ioapic.version());
-                    }
-                }
-            }
         }
     }
 }
