@@ -29,6 +29,7 @@ pub struct InterruptContext {
 }
 
 fn disable_pic() {
+    PICS.lock().init();
     unsafe {
         PICS.lock().disable();
     }

@@ -68,7 +68,7 @@ impl Task {
             (*ctx).rip = isr_return as usize;
             Task {
                 ctx: ContextMutPtr(ctx),
-                stack_top: sp as usize - 4096*4,
+                stack_top: sp as usize - stack_size,
             }
         }
         

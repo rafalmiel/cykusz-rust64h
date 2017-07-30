@@ -77,15 +77,12 @@ extern isr_handler
 isr_common:
         pushAll
 
-        xchg bx, bx
         mov rdi, rsp            ; Pass pointer to interrupt data.
         mov rsi, [rsp + 88]     ; Pass interrupt return value
         call isr_handler
 
-
 global isr_return
 isr_return:
-        xchg bx, bx
         popAll
         add rsp, 16             ; Remove err code & interrupt ID.
         iretq

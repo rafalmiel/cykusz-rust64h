@@ -21,13 +21,9 @@ pub fn disable_interrupts() {
 }
 
 pub fn interrupt_handler(int_id: u32, error_code: u32, retaddr: usize) {
-    //println!("int {}", ctx.int_id);
     match int_id {
         80 => {
-            unsafe {
-                asm!("xchg %bx, %bx");
-            }
-            //println!("SYSCALL FROM USERSPACE");
+            println!("[ TASK ] System call from user space");
 
         }
         81 => {
@@ -42,9 +38,6 @@ pub fn interrupt_handler(int_id: u32, error_code: u32, retaddr: usize) {
         }
         14 => {
             println!("PAGE FAULT 0x{:x}, addr: 0x{:x}", error_code, retaddr);
-            unsafe {
-                asm!("xchg %bx, %bx");
-            }
             loop{};
         },
         _ => {

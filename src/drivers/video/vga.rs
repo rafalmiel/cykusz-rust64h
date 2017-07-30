@@ -181,8 +181,5 @@ impl ::core::fmt::Write for Writer {
 }
 
 pub fn clear_screen() {
-    unsafe {
-        asm!("xchg %bx, %bx");
-    }
     WRITER.lock().clear();
 }
