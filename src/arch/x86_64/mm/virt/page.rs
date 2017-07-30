@@ -8,12 +8,12 @@ pub struct Page {
 impl Page {
     pub fn new(virt: VirtAddr) -> Page {
         Page {
-            number: virt as usize / PAGE_SIZE as usize,
+            number: virt.0 / PAGE_SIZE as usize,
         }
     }
 
     pub fn address(&self) -> VirtAddr {
-        self.number as VirtAddr * PAGE_SIZE
+        VirtAddr(self.number) * PAGE_SIZE
     }
 
     pub fn p4_index(&self) -> usize {

@@ -26,8 +26,6 @@ start:
 	call setup_page_tables
 	call enable_paging
 
-
-	xchg bx, bx
 	lgdt [gdt64.pointer]
 
 	pop edi

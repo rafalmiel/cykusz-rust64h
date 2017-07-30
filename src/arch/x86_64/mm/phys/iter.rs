@@ -1,5 +1,5 @@
+use drivers::multiboot2::memory::MemoryIter;
 use arch::mm::PhysAddr;
-use mboot2::memory::MemoryIter;
 use arch::mm::PAGE_SIZE;
 
 pub struct PhysMemIterator {
@@ -33,10 +33,10 @@ impl PhysMemIterator {
         let ent = mm_iter.next().expect("Memory iterator needs at least one value");
 
         PhysMemIterator {
-            current:        ent.base_addr as PhysAddr,
+            current:        PhysAddr(ent.base_addr as usize),
             mm_iter:        mm_iter,
-            mm_start:       ent.base_addr as PhysAddr,
-            mm_end:         ent.base_addr as PhysAddr + ent.length as PhysAddr,
+            mm_start:       PhysAddr(ent.base_addr as usize),
+            mm_end:         PhysAddr(ent.base_addr as usize) + ent.length as usize,
             kern_start:     kern_start,
             kern_end:       kern_end,
             mboot_start:    mboot_start,
@@ -50,7 +50,7 @@ impl PhysMemIterator {
         not_contains(addr, self.kern_start, self.kern_end) &&
         not_contains(addr, self.mboot_start, self.mboot_end) &&
         not_contains(addr, self.modules_start, self.modules_end) &&
-        addr >= 0x100000
+        addr >= PhysAddr(0x100000)
     }
 }
 
@@ -63,8 +63,8 @@ impl Iterator for PhysMemIterator {
 
             if c >= self.mm_end {
                 if let Some(e) = self.mm_iter.next() {
-                    self.mm_start = e.base_addr as PhysAddr;
-                    self.mm_end = e.base_addr as PhysAddr + e.length as usize;
+                    self.mm_start = PhysAddr(e.base_addr as usize);
+                    self.mm_end = PhysAddr(e.base_addr as usize) + e.length as usize;
                     self.current = self.mm_start;
                     continue;
                 } else {

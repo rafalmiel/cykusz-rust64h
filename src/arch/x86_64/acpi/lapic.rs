@@ -28,7 +28,7 @@ impl LApic {
     pub fn reg_write(&self, reg: u32, value: u32) {
         if let Some(base) = self.lapic_base {
             unsafe {
-                write_volatile::<u32>((base + reg as MappedAddr) as *mut u32, value);
+                write_volatile::<u32>((base + reg as usize).0 as *mut u32, value);
             }
         } else {
             panic!("Failed write!");
@@ -38,7 +38,7 @@ impl LApic {
     pub fn reg_read(&self, reg: u32) -> u32 {
         if let Some(base) = self.lapic_base {
             unsafe {
-                read_volatile::<u32>((base + reg as MappedAddr) as *const u32)
+                read_volatile::<u32>((base + reg as usize).0 as *const u32)
             }
         } else {
             panic!("Failed read!");

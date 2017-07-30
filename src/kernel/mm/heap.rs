@@ -3,13 +3,14 @@ use core::ops::Deref;
 
 use linked_list_allocator::{Heap, align_up};
 
-use arch::mm::PAGE_SIZE;
-use arch::mm::virt::map;
-use arch::sync::{Mutex};
+use kernel::mm::*;
+use kernel::mm::PAGE_SIZE;
+use kernel::mm::map;
+use arch::sync::Mutex;
 
-pub const HEAP_START: usize = 0xfffff80000000000;
+pub const HEAP_START: VirtAddr = VirtAddr(0xfffff80000000000);
 pub const HEAP_SIZE: usize = 1 * 4096; // 4KB / 1 pages // heap will grow when more memory is needed
-pub const HEAP_END: usize = HEAP_START + 4096 * 4096; // 4MB
+pub const HEAP_END: VirtAddr = VirtAddr(HEAP_START.0 + (4096 * 4096) as usize); // 4MB
 
 pub fn init()
 {
@@ -19,12 +20,12 @@ pub fn init()
         map(addr);
     }
     unsafe {
-        HEAP.0.lock().init(HEAP_START, HEAP_SIZE);
+        HEAP.0.lock().init(HEAP_START.0, HEAP_SIZE);
     }
 }
 
 fn map_more_heap(from: *const u8, size: usize) {
-    for addr in (from as usize..from as usize + size).step_by(PAGE_SIZE) {
+    for addr in (VirtAddr(from as usize)..VirtAddr(from as usize) + size).step_by(PAGE_SIZE) {
         map(addr);
     }
 }
@@ -46,7 +47,7 @@ impl LockedHeap {
                     let top = heap.top();
                     let req = align_up(layout.size(), 0x1000);
 
-                    if top + req > HEAP_END {
+                    if top as usize + req as usize > HEAP_END.0 {
                         panic!("Out of mem!");
                     }
 

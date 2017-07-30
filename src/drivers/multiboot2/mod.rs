@@ -2,8 +2,7 @@ pub mod tags;
 
 pub use self::tags::*;
 
-use arch::mm::MappedAddr;
-use arch::mm::PhysAddr;
+use kernel::mm::*;
 
 #[repr(C)]
 pub struct Info {
@@ -13,28 +12,26 @@ pub struct Info {
 }
 
 pub unsafe fn load(addr: MappedAddr) -> &'static Info {
-    &*(addr as *const Info)
+    &*(addr.0 as *const Info)
 }
 
 impl Info {
     pub fn kernel_start_addr(&self) -> PhysAddr {
-        let item = self.elf_tag().unwrap().sections().nth(0).unwrap();
-
-        item.addr as PhysAddr
+        self.elf_tag().unwrap().sections().nth(0).unwrap().address().to_phys()
     }
 
     pub fn kernel_end_addr(&self) -> PhysAddr {
         let item = self.elf_tag().unwrap().sections().last().unwrap();
 
-        item.addr as PhysAddr + item.size as PhysAddr
+        item.address().to_phys() + item.size as usize
     }
 
     pub fn modules_start_addr(&self) -> Option<PhysAddr> {
-        self.modules_tags().nth(0).and_then(|m| Some(m.mod_start as PhysAddr))
+        self.modules_tags().nth(0).and_then(|m| Some(VirtAddr(m.mod_start as usize).to_phys()))
     }
 
     pub fn modules_end_addr(&self) -> Option<PhysAddr> {
-        self.modules_tags().last().and_then(|m| Some(m.mod_end as PhysAddr))
+        self.modules_tags().last().and_then(|m| Some(VirtAddr(m.mod_end as usize).to_phys()))
     }
 
     pub fn tags(&self) -> tags::TagIter {

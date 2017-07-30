@@ -6,8 +6,6 @@ extern gdt64
 
 global higher_half_start
 
-global switch_to_user
-
 section .text
 higher_half_start:
 	; Setup higher half stack
@@ -41,25 +39,6 @@ higher_half_start:
 .loop:
     hlt
     jmp $
-
-switch_to_user:
-    cli
-
-    mov ax,0x23
-    mov ds,ax
-    mov es,ax
-    mov fs,ax
-    mov gs,ax
-
-    xchg bx, bx
-    mov rax, 0x400000
-    mov rbx, rsp
-	push 0x23
-	push rbx
-	push 0x200
-	push 0x1B
-	push rax
-	iretq
 
 section .stack
 stack_bottom:

@@ -1,9 +1,11 @@
 pub mod idt;
 
 use arch::sync::Mutex;
+
+use kernel;
+
 use arch::pic;
 use arch::acpi::Acpi;
-use arch::task::resched;
 
 static PICS: Mutex<pic::ChainedPics> = Mutex::new(unsafe { pic::ChainedPics::new(0x20, 0x28) });
 static ACPI: Mutex<Acpi> = Mutex::new(Acpi::new());
@@ -26,13 +28,13 @@ pub struct InterruptContext {
     _pad2: u32,
 }
 
-pub fn disable_pic() {
+fn disable_pic() {
     unsafe {
         PICS.lock().disable();
     }
 }
 
-pub fn end_of_interrupt() {
+pub(in arch) fn end_of_interrupt() {
     ACPI.lock().lapic.end_of_interrupt();
 }
 
@@ -60,7 +62,7 @@ pub fn disable_interrupts() {
     }
 }
 
-pub fn remap_irq(irq: u32) -> u32 {
+pub(in arch) fn remap_irq(irq: u32) -> u32 {
     if let Some(i) = ACPI.lock().rsdt.remap_irq(irq) {
         return i;
     } else {
@@ -69,44 +71,18 @@ pub fn remap_irq(irq: u32) -> u32 {
 }
 
 pub fn init_acpi() {
-    println!("Initializing acpi");
     ACPI.lock().init();
 }
 
 #[no_mangle]
 pub extern "C" fn isr_handler(ctx: &InterruptContext, retaddr: usize) {
     //println!("int {}", ctx.int_id);
-    match ctx.int_id {
-        80 => {
-            unsafe {
-                asm!("xchg %bx, %bx");
-            }
-            println!("SYSCALL FROM USERSPACE");
-
-        }
-        33 => println!("Keyboard interrupt detected"),
-        13 => {
-            println!("GPF");
-            disable_interrupts();
-            loop{}
-        }
-        14 => {
-            println!("PAGE FAULT 0x{:x}, addr: 0x{:x}", ctx.error_code, retaddr);
-            unsafe {
-                asm!("xchg %bx, %bx");
-            }
-            loop{};
-        },
-        _ => {
-            //println!("OTHER INTERRUPT {}", ctx.int_id);
-            //loop{};
-        }
-    }
+    kernel::int::interrupt_handler(ctx.int_id, ctx.error_code, retaddr);
 
     end_of_interrupt();
 
     if ctx.int_id == 32 {
-        resched();
+        ::kernel::sched::resched();
     }
 }
 
@@ -114,9 +90,15 @@ pub fn init() {
 
     IDT.lock().init();
 
-    //PICS.lock().init();
+    println!("[ OK ] Initialised interrupts");
 
     disable_pic();
 
     init_acpi();
+
+    println!("[ OK ] Initialised ACPI");
+
+    unsafe {
+        idt::test();
+    }
 }

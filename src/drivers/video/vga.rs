@@ -1,23 +1,11 @@
 use core::ptr::Unique;
 use arch::sync::Mutex;
 
+use kernel::mm::*;
+
 use arch::cpuio::Port;
-use arch::mm::PhysAddr;
 
-use arch::mm::phys_to_physmap;
-
-macro_rules! println {
-    ($fmt:expr) => (print!(concat!($fmt, "\n")));
-    ($fmt:expr, $($arg:tt)*) => (print!(concat!($fmt, "\n"), $($arg)*));
-}
-
-macro_rules! print {
-    ($($arg:tt)*) => ({
-        use core::fmt::Write;
-        $crate::vga::WRITER.lock().write_fmt(format_args!($($arg)*)).unwrap();
-    });
-}
-
+#[allow(unused)]
 #[repr(u8)]
 pub enum Color {
     Black = 0,
@@ -56,7 +44,7 @@ struct ScreenChar {
 
 const BUFFER_HEIGHT: usize = 25;
 const BUFFER_WIDTH: usize = 80;
-const VGA_BUFFER: PhysAddr = 0xb8000;
+const VGA_BUFFER: PhysAddr = PhysAddr(0xb8000);
 
 static CURSOR_INDEX: Mutex<Port<u8>> = Mutex::new(unsafe { Port::new(0x3D4) });
 
@@ -67,7 +55,7 @@ lazy_static! {
         column: 0,
         row: 0,
         color: ColorCode::new(Color::LightGreen, Color::Black),
-        buffer: unsafe { Unique::new((phys_to_physmap(VGA_BUFFER)) as *mut _) },
+        buffer: unsafe { Unique::new_unchecked((VGA_BUFFER.to_mapped().0) as *mut _) },
     });
 }
 
@@ -99,6 +87,11 @@ impl Writer {
 
                 self.buffer().chars[row * BUFFER_WIDTH + col] = mk_scr_char(byte, self.color);
                 self.column += 1;
+
+                if self.column == 80 {
+                    self.column = 0;
+                    self.row += 1;
+                }
             }
         }
 
@@ -154,6 +147,7 @@ impl Writer {
         self.update_cursor();
     }
 
+    #[allow(unused)]
     fn clear_row(&mut self) {
         let blank = mk_scr_char(b' ', self.color);
         let row = self.row;
@@ -163,12 +157,14 @@ impl Writer {
         }
     }
 
-    pub fn write_str(&mut self, s: &str) {
+    #[allow(unused)]
+    pub fn write_str(&mut self, s: &str)  -> ::core::fmt::Result {
         for byte in s.bytes() {
             self.write_byte(byte)
         }
         self.scroll();
         self.update_cursor();
+        Ok(())
     }
 }
 
@@ -185,5 +181,8 @@ impl ::core::fmt::Write for Writer {
 }
 
 pub fn clear_screen() {
+    unsafe {
+        asm!("xchg %bx, %bx");
+    }
     WRITER.lock().clear();
 }

@@ -1,8 +1,13 @@
 use core::marker::PhantomData;
 
+use kernel::mm::virt;
+use kernel::mm::*;
+
 use arch::mm::virt::entry::Entry;
 use arch::mm::virt::entry;
 use arch::mm::phys::Frame;
+
+use super::page;
 
 const ENTRIES_COUNT: usize = 512;
 
@@ -48,38 +53,17 @@ pub type P4Table = Table<Level4>;
 
 impl<L> Table<L>
 where
-    L :TopLevel
-{
-    pub fn new_mut<'a>(frame: &Frame) -> &'a mut Table<L> {
-        Table::<L>::new_at_frame_mut(frame)
-    }
-
-    pub fn new<'a>(frame: &Frame) -> &'a Table<L> {
-        Table::<L>::new_at_frame(frame)
-    }
-
-    pub fn entry_at(&self, idx: usize) -> &Entry {
-        return &self.entries[idx]
-    }
-
-    pub fn set_entry(&mut self, idx: usize, entry: &Entry) {
-        self.entries[idx].set_raw(entry.raw());
-    }
-}
-
-impl<L> Table<L>
-where
     L: TableLevel
 {
     fn new_at_frame_mut<'a>(frame: &Frame) -> &'a mut Table<L> {
         unsafe {
-            &mut *(frame.address_mapped() as *mut Table<L>)
+            frame.address_mapped().read_mut::<Table<L>>()
         }
     }
 
     fn new_at_frame<'a>(frame: &Frame) -> &'a Table<L> {
         unsafe {
-            &*(frame.address_mapped() as *const Table<L>)
+            frame.address_mapped().read_ref::<Table<L>>()
         }
     }
 
@@ -178,7 +162,7 @@ where
         let entry = &mut self.entries[idx];
 
         if !entry.contains(entry::PRESENT) {
-            entry.set_frame_flags(&frame, flags);
+            entry.set_frame_flags(&frame, entry::PRESENT | flags);
         }
     }
 
@@ -191,6 +175,81 @@ where
             ::arch::mm::phys::deallocate(&frame);
 
             entry.clear();
+        }
+    }
+}
+
+impl<L> Table<L>
+where
+    L :TopLevel + NotLastLevel
+{
+    pub fn new_mut<'a>(frame: &Frame) -> &'a mut Table<L> {
+        Table::<L>::new_at_frame_mut(frame)
+    }
+
+    pub fn new<'a>(frame: &Frame) -> &'a Table<L> {
+        Table::<L>::new_at_frame(frame)
+    }
+
+    pub fn entry_at(&self, idx: usize) -> &Entry {
+        return &self.entries[idx]
+    }
+
+    pub fn set_entry(&mut self, idx: usize, entry: &Entry) {
+        self.entries[idx].set_raw(entry.raw());
+    }
+
+    pub fn phys_addr(&self) -> PhysAddr {
+        MappedAddr(self as *const _ as usize).to_phys()
+    }
+}
+
+impl Table<Level4> {
+    pub fn map_flags(&mut self, addr: VirtAddr, flags: virt::PageFlags) {
+        let page = page::Page::new(addr);
+        self.alloc_next_level(page.p4_index())
+            .alloc_next_level(page.p3_index())
+            .alloc_next_level(page.p2_index())
+            .alloc_set_flags(page.p1_index(), entry::Entry::from_kernel_flags(flags));
+    }
+
+    pub fn map_to_flags(&mut self, virt: VirtAddr, phys: PhysAddr, flags: virt::PageFlags) {
+        let page = page::Page::new(virt);
+
+        self.alloc_next_level(page.p4_index())
+            .alloc_next_level(page.p3_index())
+            .alloc_next_level(page.p2_index())
+            .set_flags(page.p1_index(), &Frame::new(phys), entry::Entry::from_kernel_flags(flags));
+    }
+
+    pub fn map_to(&mut self, virt: VirtAddr, phys: PhysAddr) {
+        let page = page::Page::new(virt);
+
+        self.alloc_next_level(page.p4_index())
+            .alloc_next_level(page.p3_index())
+            .alloc_next_level(page.p2_index())
+            .set(page.p1_index(), &Frame::new(phys));
+    }
+
+    pub fn map_hugepage_to(&mut self, virt: VirtAddr, phys: PhysAddr) {
+        let page = page::Page::new(virt);
+
+        self.alloc_next_level(page.p4_index())
+            .alloc_next_level(page.p3_index())
+            .set_hugepage(page.p2_index(), &Frame::new(phys));
+    }
+
+    pub fn unmap(&mut self, virt: VirtAddr) {
+        let page = page::Page::new(virt);
+
+        if let Some(p1) = 
+            self.next_level_mut(page.p4_index())
+                .and_then(|t| t.next_level_mut(page.p3_index())
+                .and_then(|t| t.next_level_mut(page.p2_index()))) {
+
+            p1.unmap(page.p1_index());
+        } else {
+            println!("ERROR: virt addr {} cannot be unmapped", virt);
         }
     }
 }

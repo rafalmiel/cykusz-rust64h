@@ -1,138 +1,77 @@
-#![feature(lang_items, asm, unique)]
-#![feature(const_fn)]
-#![feature(associated_type_defaults)]
-#![feature(naked_functions)]
 #![no_std]
-#![allow(dead_code)]
-#![feature(iterator_step_by, inclusive_range_syntax)]
-//alloc features
+
+#![feature(asm)]
+#![feature(const_fn)]
+#![feature(iterator_step_by)]
+#![feature(lang_items)]
+#![feature(step_trait)]
+#![feature(unique)]
 #![feature(alloc)]
 #![feature(allocator_api)]
 #![feature(global_allocator)]
 
-
-#[macro_use]
-extern crate alloc;
+#![allow(dead_code)]
 
 extern crate rlibc;
 extern crate spin;
 #[macro_use]
+extern crate lazy_static;
+#[macro_use]
 extern crate x86;
 #[macro_use]
 extern crate bitflags;
-#[macro_use]
-extern crate lazy_static;
-
 extern crate linked_list_allocator;
 
+extern crate alloc;
+
 #[macro_use]
-mod vga;
+mod kernel;
 
+#[macro_use]
+pub mod newtype;
+
+#[macro_use]
 pub mod arch;
-mod mm;
 
-mod mboot2;
+mod drivers;
 mod util;
 
-//global allocator needs to be placed in root module? otherwise does not compile
 #[global_allocator]
-static mut HEAP: arch::mm::heap::LockedHeap = arch::mm::heap::LockedHeap::empty();
+static mut HEAP: kernel::mm::heap::LockedHeap = kernel::mm::heap::LockedHeap::empty();
 
-#[no_mangle]
-pub fn notify_alloc(_addr: *const u8) {
-    //println!("Calling from allocator! 0x{:x}", addr as usize);
+fn task() {
+    for _ in 0..10000 {
+
+    }
+
+    //println!("[ TASK ] About to finish task 1")
 }
 
-#[no_mangle]
-pub fn notify_dealloc(_addr: *const u8) {
-    //println!("Calling from deallocator! 0x{:x}", addr as usize);
-}
+fn task2() {
+    for _ in 0..10000 {
+        
+    }
 
-#[no_mangle]
-pub fn log(l: &str) {
-    print!("{}", l);
-}
-
-#[no_mangle]
-pub fn logln(l: &str) {
-    println!("{}", l);
-}
-
-
-#[no_mangle]
-pub extern "C" fn logn(n: usize) {
-    print!("0x{:x}", n);
-}
-
-extern "C" {
-    fn switch_to_user();
+    //println!("[ TASK ] About to finish task 2")
 }
 
 pub fn rust_main() {
-    println!("In rust main!");
 
-    // for _ in 1..1 {
-    //     let a = arch::mm::phys::allocate();
-    //     let b = arch::mm::phys::allocate();
-    //     let c = arch::mm::phys::allocate();
-    //
-    //     if let Some(ref f) = a {
-    //         println!("Allocated: 0x{:x}", f.address());
-    //     }
-    //     if let Some(ref f) = b {
-    //         println!("Allocated: 0x{:x}", f.address());
-    //     }
-    //     if let Some(ref f) = c {
-    //         println!("Allocated: 0x{:x}", f.address());
-    //     }
-    //
-    //     if let Some(f) = arch::mm::phys::allocate() {
-    //         println!("Allocated: 0x{:x}", f.address());
-    //     }
-    //     if let Some(f) = arch::mm::phys::allocate() {
-    //         println!("Allocated: 0x{:x}", f.address());
-    //     }
-    //     if let Some(f) = arch::mm::phys::allocate() {
-    //         println!("Allocated: 0x{:x}", f.address());
-    //     }
-    //     if let Some(f) = arch::mm::phys::allocate() {
-    //         println!("Allocated: 0x{:x}", f.address());
-    //     }
-    // }
+    kernel::mm::init();
 
+    kernel::sched::init();
 
-    {
-        use alloc::boxed::Box;
+    println!("[ OK ] Initialised scheduler");
 
-        unsafe {
-            asm!("xchg %bx, %bx");
-        }
+    kernel::sched::create_kernel_task(task);
+    kernel::sched::create_kernel_task(task2);
 
+    kernel::sched::create_user_task(
+        unsafe {::core::mem::transmute::<usize, fn() -> ()>(0x400000) }, 
+        0x600000, 4096);
 
-        let mut heap_test = Box::new(42);
-
-        Box::new(42);
-
-        let a = vec![1,2,3];
-
-        for i in a {
-            print!("{} ", i);
-        }
-
-        Box::new(42);
-
-        *heap_test = 33;
-    }
-
-    println!("Allocated on heap! {}", 3);
-
-    unsafe {
-        asm!("xchg %bx, %bx");
-    }
-
-    vga::clear_screen();
-
-    arch::task::init();
+    kernel::int::fire_timer();
+    kernel::int::enable_interrupts();
 }
 
 #[cfg(not(test))]

@@ -64,7 +64,7 @@ impl Idt {
 }
 
 pub unsafe fn test() {
-    int!(80);
+    int!(81);
 }
 
 pub unsafe fn enable() {

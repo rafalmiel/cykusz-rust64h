@@ -1,7 +1,7 @@
 use core::ptr::write_volatile;
 use core::ptr::read_volatile;
 
-use arch::mm::MappedAddr;
+use kernel::mm::*;
 
 const REG_ID: u32 =	    0x00;
 const REG_VER: u32 =    0x01;
@@ -77,12 +77,12 @@ impl IOApic {
         if let Some(base) = self.ioapic_base {
             unsafe {
                 write_volatile::<u32>(
-                    base as *mut u32,
+                    base.0 as *mut u32,
                     reg
                 );
 
                 return read_volatile::<u32>(
-                    (base + 0x10) as *const u32
+                    (base.0 + 0x10) as *const u32
                 );
             }
         } else {
@@ -94,12 +94,12 @@ impl IOApic {
         if let Some(base) = self.ioapic_base {
             unsafe {
                 write_volatile::<u32>(
-                    base as *mut u32,
+                    base.0 as *mut u32,
                     reg
                 );
 
                 write_volatile::<u32>(
-                    (base + 0x10) as *mut u32,
+                    (base.0 + 0x10) as *mut u32,
                     value
                 );
             }

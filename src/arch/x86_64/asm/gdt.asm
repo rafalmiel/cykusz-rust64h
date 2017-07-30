@@ -2,7 +2,6 @@ global gdt64
 global gdt64.code
 global gdt64.data
 global gdt64.pointer
-global gdt64_tss
 
 ; higher half gdt
 section .data
@@ -37,7 +36,7 @@ gdt64:
 	db 11110010b	; Access (Pr Privl=3 1 Ex=0 Dc=0 RW Ac=0)
 	db 00000000b	; Flags (64bit) Limit (high)
 	db 0			; Base (high)
-gdt64_tss: equ $ - gdt64
+.tss: equ $ - gdt64
 	dq 0
 	dq 0
 .pointer:

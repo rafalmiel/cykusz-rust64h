@@ -2,6 +2,8 @@ use arch::mm::phys::Frame;
 use arch::mm::MappedAddr;
 use arch::mm::PhysAddr;
 
+use kernel::mm::*;
+
 bitflags! {
     pub struct Entry: usize {
         const PRESENT       = 1 << 0;
@@ -24,10 +26,25 @@ impl Entry {
         }
     }
 
+    pub fn from_kernel_flags(flags: virt::PageFlags) -> Entry {
+        let mut res: Entry = Entry::new_empty();
+
+        if flags.contains(virt::NO_EXECUTE) {
+            res.insert(NO_EXECUTE);
+        }
+        if flags.contains(virt::USER) {
+            res.insert(USER);
+        }
+        if flags.contains(virt::WRITABLE) {
+            res.insert(WRITABLE);
+        }
+
+        return res;
+    }
+
     pub unsafe fn from_addr(addr: MappedAddr) -> Entry {
-        //println!("Dereferencing value at 0x{:x}", addr);
         Entry {
-            bits: *(addr as *const MappedAddr)
+            bits: addr.read::<usize>(),
         }
     }
 
@@ -48,7 +65,7 @@ impl Entry {
     }
 
     pub fn address(&self) -> PhysAddr {
-        self.bits as PhysAddr & 0x000fffff_fffff000
+        PhysAddr(self.bits) & PhysAddr(0x000fffff_fffff000)
     }
 
     pub fn frame(&self) -> Option<Frame> {
@@ -60,12 +77,12 @@ impl Entry {
     }
 
     pub fn set_frame_flags(&mut self, frame: &Frame, flags: Entry) {
-        self.bits = frame.address();
+        self.bits = frame.address().0;
         self.insert(flags | USER);
     }
 
     pub fn set_frame(&mut self, frame: &Frame) {
-        self.bits = frame.address();
+        self.bits = frame.address().0;
     }
 
     pub fn set_flags(&mut self, flags: Entry) {

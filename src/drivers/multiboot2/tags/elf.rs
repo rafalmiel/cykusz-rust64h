@@ -1,4 +1,5 @@
-use mboot2::tags::Tag;
+use drivers::multiboot2::tags::Tag;
+use kernel::mm::*;
 
 #[repr(packed)]
 pub struct Elf {
@@ -14,7 +15,7 @@ pub struct ElfSection {
     name:                       u32,
     pub typ:                    u32,
     pub flags:                  u64,
-    pub addr:                   u64,
+    addr:                       u64,
     offset:                     u64,
     pub size:                   u64,
     link:                       u32,
@@ -62,12 +63,12 @@ impl Elf {
 }
 
 impl ElfSection {
-    pub fn address(&self) -> u64 {
-        self.addr
+    pub fn address(&self) -> VirtAddr {
+        PhysAddr(self.addr as usize).to_virt()
     }
 
-    pub fn end_address(&self) -> u64 {
-        self.addr + self.size
+    pub fn end_address(&self) -> VirtAddr {
+        PhysAddr(self.addr as usize + self.size as usize).to_virt()
     }
 }
 

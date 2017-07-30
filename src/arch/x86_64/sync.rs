@@ -1,5 +1,5 @@
 use core::ops::{Deref, DerefMut};
-use arch::task::{task_locked, task_unlocked};
+use kernel::sched::{task_locked, task_unlocked};
 use arch::int::{disable_interrupts, enable_interrupts};
 use spin::{Mutex as M, MutexGuard as MG};
 
@@ -9,7 +9,8 @@ pub struct Mutex<T> {
 
 pub struct MutexGuard<'a, T: ?Sized + 'a> {
     g: Option<MG<'a, T>>,
-    irq: bool
+    irq: bool,
+    task_locked: bool
 }
 
 impl<T> Mutex<T> {
@@ -24,7 +25,8 @@ impl<T> Mutex<T> {
         task_locked();
         MutexGuard {
             g: Some(self.l.lock()),
-            irq: false
+            irq: false,
+            task_locked: true
         }
     }
 
@@ -33,7 +35,8 @@ impl<T> Mutex<T> {
         task_locked();
         MutexGuard {
             g: Some(self.l.lock()),
-            irq: true
+            irq: true,
+            task_locked: true
         }
     }
 }
@@ -54,7 +57,9 @@ impl<'a, T: ?Sized> DerefMut for MutexGuard<'a, T> {
 impl<'a, T: ?Sized> Drop for MutexGuard<'a, T> {
     fn drop(&mut self) {
         drop(self.g.take());
-        task_unlocked();
+        if self.task_locked {
+            task_unlocked();
+        }
         if self.irq {
             enable_interrupts();
         }

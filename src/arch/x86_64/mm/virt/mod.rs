@@ -2,100 +2,16 @@ pub mod entry;
 mod page;
 mod table;
 
-use arch::mm::*;
+use kernel::mm::virt;
+use kernel::mm::*;
+
+use arch::mm::PAGE_SIZE;
 use arch::mm::phys::Frame;
 use self::table::*;
 
-const PAGE_SIZE: usize = 4096;
-
-fn p4_table_addr() -> MappedAddr {
+fn p4_table_addr() -> PhysAddr {
     unsafe {
-        phys_to_physmap(::x86::shared::control_regs::cr3() as PhysAddr)
-    }
-}
-
-fn table_map_flags(table: &mut P4Table, addr: VirtAddr, flags: entry::Entry) {
-    let page = page::Page::new(addr);
-
-    table.alloc_next_level(page.p4_index())
-         .alloc_next_level(page.p3_index())
-         .alloc_next_level(page.p2_index())
-         .alloc_set_flags(page.p1_index(), flags);
-}
-
-fn table_map_frame_flags(table: &mut P4Table, virt: VirtAddr, phys: PhysAddr, flags: entry::Entry) {
-    let page = page::Page::new(virt);
-
-    table.alloc_next_level(page.p4_index())
-         .alloc_next_level(page.p3_index())
-         .alloc_next_level(page.p2_index())
-         .set_flags(page.p1_index(), &Frame::new(phys), flags);
-}
-
-fn table_map_frame(table: &mut P4Table, virt: VirtAddr, phys: PhysAddr) {
-    let page = page::Page::new(virt);
-
-    table.alloc_next_level(page.p4_index())
-         .alloc_next_level(page.p3_index())
-         .alloc_next_level(page.p2_index())
-         .set(page.p1_index(), &Frame::new(phys));
-}
-
-fn table_map_hugepage_frame(table: &mut P4Table, virt: VirtAddr, phys: PhysAddr) {
-    let page = page::Page::new(virt);
-
-    table.alloc_next_level(page.p4_index())
-          .alloc_next_level(page.p3_index())
-          .set_hugepage(page.p2_index(), &Frame::new(phys));
-}
-
-pub fn map_flags(virt: VirtAddr, flags: entry::Entry) {
-    table_map_flags(
-        P4Table::new_mut(&Frame::new(p4_table_addr())),
-        virt,
-        flags
-    );
-
-    unsafe {
-        ::x86::shared::tlb::flush(virt);
-    }
-}
-
-pub fn map(virt: VirtAddr) {
-    map_flags(virt, entry::WRITABLE);
-}
-
-pub fn unmap(virt: VirtAddr) {
-    let page = page::Page::new(virt);
-
-    if let Some(p1) = Table::<Level4>::new_mut(
-        &Frame::new(p4_table_addr())
-    )
-        .next_level_mut(page.p4_index())
-        .and_then(|t| t.next_level_mut(page.p3_index())
-        .and_then(|t| t.next_level_mut(page.p2_index()))) {
-
-        p1.unmap(page.p1_index());
-
-        unsafe {
-            ::x86::shared::tlb::flush(virt);
-        };
-    } else {
-        println!("ERROR: virt addr 0x{:x} cannot be unmapped", virt);
-    }
-}
-
-#[allow(unused)]
-pub fn map_to(virt: VirtAddr, phys: PhysAddr) {
-
-    table_map_frame(
-        P4Table::new_mut(&Frame::new(p4_table_addr())),
-        virt,
-        phys
-    );
-
-    unsafe {
-        ::x86::shared::tlb::flush(virt);
+        PhysAddr(::x86::shared::control_regs::cr3())
     }
 }
 
@@ -115,7 +31,50 @@ fn enable_write_protect_bit() {
     unsafe { cr0_write(cr0() | CR0_WRITE_PROTECT) };
 }
 
-fn remap(mboot_info: &mboot2::Info) {
+pub fn flush(virt: VirtAddr) {
+    unsafe {
+        ::x86::shared::tlb::flush(virt.0);
+    }
+}
+
+pub fn flush_all() {
+    unsafe {
+        ::x86::shared::tlb::flush_all();
+    }
+}
+
+pub fn map_flags(virt: VirtAddr, flags: virt::PageFlags) {
+    P4Table::new_mut(
+        &Frame::new(p4_table_addr())
+    ).map_flags(virt, flags);
+
+    flush(virt);
+}
+
+pub fn map(virt: VirtAddr) {
+    map_flags(virt, virt::WRITABLE);
+}
+
+pub fn unmap(virt: VirtAddr) {
+    P4Table::new_mut(
+        &Frame::new(p4_table_addr())
+    ).unmap(virt);
+
+    flush(virt);
+}
+
+#[allow(unused)]
+pub fn map_to(virt: VirtAddr, phys: PhysAddr) {
+    P4Table::new_mut(&Frame::new(p4_table_addr())).map_to(virt, phys);
+
+    flush(virt);
+}
+
+pub unsafe fn activate_table(table: &P4Table) {
+    ::x86::shared::control_regs::cr3_write(table.phys_addr().0);
+}
+
+fn remap(mboot_info: &::drivers::multiboot2::Info) {
     let frame = ::arch::mm::phys::allocate().expect("Out of mem!");
     let table = P4Table::new_mut(&frame);
 
@@ -123,27 +82,26 @@ fn remap(mboot_info: &mboot2::Info) {
 
     for elf in mboot_info.elf_tag().unwrap().sections() {
 
-        let s = ::util::align_down(virt_to_phys(elf.address() as VirtAddr) as usize, PAGE_SIZE);
-        let e = ::util::align_up(virt_to_phys(elf.end_address() as VirtAddr) as usize, PAGE_SIZE);
+        let s = elf.address().align_down(PAGE_SIZE);
+        let e = elf.end_address().align_up(PAGE_SIZE);
 
-        let mut flags = entry::Entry::empty();
+        let mut flags = virt::PageFlags::empty();
 
-        use ::mboot2::elf::ElfSectionFlags;
+        use ::drivers::multiboot2::elf::ElfSectionFlags;
 
-        if (elf.flags as usize & ElfSectionFlags::Allocated as usize) == ElfSectionFlags::Allocated as usize {
-            flags.insert(entry::PRESENT);
+        if (elf.flags as usize & ElfSectionFlags::Allocated as usize) == 0 as usize {
+            continue;
         }
+
         if (elf.flags as usize & ElfSectionFlags::Writable as usize) == ElfSectionFlags::Writable as usize {
-            flags.insert(entry::WRITABLE);
+            flags.insert(virt::WRITABLE);
         }
         if (elf.flags as usize & ElfSectionFlags::Executable as usize) == 0 {
-            flags.insert(entry::NO_EXECUTE);
+            flags.insert(virt::NO_EXECUTE);
         }
 
-        println!("from 0x{:x} to 0x{:x} with flags 0x{:x}", s, e, flags.raw());
-
         for addr in (s..e).step_by(PAGE_SIZE) {
-            table_map_frame_flags(table, phys_to_virt(addr), addr, flags);
+            table.map_to_flags(addr, addr.to_phys(), flags);
         }
     }
 
@@ -152,17 +110,17 @@ fn remap(mboot_info: &mboot2::Info) {
     table.set_entry(256, orig.entry_at(256));
 
     unsafe {
-        println!("Writing cr3 with value 0x{:x}", frame.address());
-
-        enable_nxe_bit();
-        enable_write_protect_bit();
-
-        ::x86::shared::control_regs::cr3_write(frame.address() as usize);
-
-        ::x86::shared::tlb::flush_all();
+        activate_table(&table);
     }
 }
 
-pub fn init(mboot_info: &mboot2::Info) {
+pub fn init(mboot_info: &::drivers::multiboot2::Info) {
+    enable_nxe_bit();
+    enable_write_protect_bit();
+
+    println!("[ OK ] Enabled nxe and write protect");
+
     remap(&mboot_info);
+
+    println!("[ OK ] Remapped kernel code");
 }

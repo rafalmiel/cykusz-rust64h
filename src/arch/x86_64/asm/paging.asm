@@ -102,7 +102,6 @@ map_p3_table_phys:
 
 	mov [__p3_table_phys + 8*ecx], ebx
 
-	xchg bx, bx
 	call map_2g_pages
 	add esp, 4*3
 
@@ -133,7 +132,6 @@ enable_paging:
 	or eax, 1 << 16
 	mov cr0, eax
 
-	xchg bx, bx
 	ret
 
 section .bss

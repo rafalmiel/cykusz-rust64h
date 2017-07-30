@@ -1,4 +1,5 @@
 use core::mem::size_of;
+use arch::mm::*;
 
 use arch::acpi;
 
@@ -16,50 +17,46 @@ impl Rsdp {
         if &self.signature as &[u8] != b"RSD PTR " {
             false
         } else {
-            println!("Found RSDP sig at 0x{:x}", self as *const _ as usize);
+            // println!("Found RSDP sig at 0x{:x}", self as *const _ as usize);
 
-            println!("Checksum: 0x{:x}", self.checksum);
-            println!("Revision: {}", self.revision);
+            // println!("Checksum: 0x{:x}", self.checksum);
+            // println!("Revision: {}", self.revision);
 
             acpi::util::checksum(self as *const _ as *const u8, size_of::<Rsdp>() as isize)
         }
     }
 
     pub unsafe fn find() -> Option<&'static Rsdp> {
-        use arch::mm::phys_to_physmap;
-        let ebda_address =
-        unsafe {
-            phys_to_physmap(*(phys_to_physmap(0x40E) as *const u16) as usize * 4)
-        };
+        let ebda_address = PhysAddr((PhysAddr(0x40E as usize).to_mapped().read::<u16>()) as usize * 4).to_mapped();
+        ebda_address.to_phys();
         let ebda_iter = (
-            ebda_address as u64
+            ebda_address
             ..
-            (ebda_address + 1024) as u64).step_by(0x10);
+            (ebda_address + 1024)).step_by(0x10);
 
         for addr in ebda_iter {
-            let ptr = &*(addr as *const Rsdp);
+            let ptr = addr.read_ref::<Rsdp>();
 
             if ptr.is_valid() {
                 return Some(ptr);
             }
         }
 
-        println!("Rsdp not found on ebda 0x{:x}", ebda_address);
+        // println!("Rsdp not found on ebda {}", ebda_address);
 
         let iter = (
-            phys_to_physmap(0xE0_000) as u64
+            PhysAddr(0xE0_000 as usize).to_mapped()
             ..
-            phys_to_physmap(0x10_0000) as u64).step_by(0x10);
+            PhysAddr(0x100_000 as usize).to_mapped()).step_by(0x10);
 
         for addr in iter {
-            let ptr = &*(addr as *const Rsdp);
+            let ptr = addr.read_ref::<Rsdp>();
 
             if ptr.is_valid() {
                 return Some(ptr);
             }
         }
-
-        println!("Rsdp not found on 0xE0000");
+        // println!("Rsdp not found on 0xE0000");
 
         None
     }

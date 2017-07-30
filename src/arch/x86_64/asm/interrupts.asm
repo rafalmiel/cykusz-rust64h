@@ -85,6 +85,7 @@ isr_common:
 
 global isr_return
 isr_return:
+        xchg bx, bx
         popAll
         add rsp, 16             ; Remove err code & interrupt ID.
         iretq

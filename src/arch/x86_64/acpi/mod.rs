@@ -8,9 +8,7 @@ use arch::acpi::rsdp::Rsdp;
 use arch::acpi::rsdt::Rsdt;
 use arch::acpi::lapic::LApic;
 use arch::acpi::ioapic::IOApic;
-use arch::mm::PhysAddr;
-
-use arch::mm::phys_to_physmap;
+use kernel::mm::*;
 
 pub struct Acpi {
     pub rsdt: Rsdt,
@@ -27,25 +25,23 @@ impl Acpi {
         unsafe {
             let rsdp = Rsdp::find().expect("RSDP Not found!");
 
-            println!("Found Rsdp!");
-
-            self.rsdt.init(phys_to_physmap(rsdp.rsdt_address as PhysAddr));
+            self.rsdt.init(PhysAddr(rsdp.rsdt_address as usize).to_mapped());
 
             let lapic_base = self.rsdt.local_controller_address().expect("LAPIC address not found!");
 
-            println!("Initialised lapic_base");
+            // println!("Initialised lapic_base");
 
             self.lapic.init(lapic_base);
 
             let ioapic_base = self.rsdt.ioapic_address().expect("IOApic address not found!");
 
-            println!("Initialised ioapic_base!");
+            // println!("Initialised ioapic_base!");
 
             self.ioapic.init(ioapic_base);
 
-            println!("IOApic initialised! id: {}, ident: {}, entries: {}, version: {}",
-                            self.ioapic.id(), self.ioapic.identification(),
-                            self.ioapic.max_red_entry() + 1, self.ioapic.version());
+            // println!("IOApic initialised! id: {}, ident: {}, entries: {}, version: {}",
+            //                 self.ioapic.id(), self.ioapic.identification(),
+            //                 self.ioapic.max_red_entry() + 1, self.ioapic.version());
         }
     }
 }

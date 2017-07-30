@@ -1,4 +1,4 @@
-use mboot2::tags::Tag;
+use drivers::multiboot2::tags::Tag;
 
 #[repr(C)]
 pub struct Memory {

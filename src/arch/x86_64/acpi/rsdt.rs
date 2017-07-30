@@ -1,9 +1,6 @@
 use core::mem::size_of;
 
-use arch::mm::PhysAddr;
-use arch::mm::MappedAddr;
-
-use arch::mm::phys_to_physmap;
+use kernel::mm::*;
 
 const MATD_ENTRY_PROC_LOCAL_APIC: u8  = 0x0;
 const MATD_ENTRY_PROC_IOAPIC: u8      = 0x1;
@@ -90,14 +87,14 @@ impl Rsdt {
 
 
                         let localapic = &*(a as *const MATDEntryLocalApic);
-                        println!("Local apic: procid: {}, apicid: {}, flags: 0x{:x}",
+                        println!("[ INFO ] Local APIC: procid: {}, apicid: {}, flags: 0x{:x}",
                             localapic.proc_id, localapic.apic_id, localapic.flags);
                     },
                     MATD_ENTRY_PROC_IOAPIC => {
                         let ioapic = &*(a as *const MATDEntryIOApic);
-                        self.ioapic_address = Some(ioapic.ioapic_address as PhysAddr);
+                        self.ioapic_address = Some(PhysAddr(ioapic.ioapic_address as usize));
 
-                        println!("IOApic: address: 0x{:x}", self.ioapic_address.unwrap());
+                        //println!("IOApic: address: {}", self.ioapic_address.unwrap());
                     },
                     _ => {}
                 }
@@ -137,20 +134,20 @@ impl Rsdt {
 
     pub fn local_controller_address(&self) -> Option<MappedAddr> {
         self.matd.and_then(|addr| {
-            Some(phys_to_physmap(addr.local_controller_address as PhysAddr))
+            Some(PhysAddr(addr.local_controller_address as usize).to_mapped())
         })
     }
 
     pub fn ioapic_address(&self) -> Option<MappedAddr> {
         self.ioapic_address.and_then(|addr| {
-            Some(phys_to_physmap(addr))
+            Some(addr.to_mapped())
         })
     }
 
     pub fn init(&mut self, rsdt_address: MappedAddr) {
         use super::util::checksum;
         unsafe {
-            let rsdt_header = &*(rsdt_address as *const RSDTHeader);
+            let rsdt_header = &*(rsdt_address.0 as *const RSDTHeader);
 
             if &rsdt_header.signature == b"RSDT"
                && checksum(rsdt_header as *const _ as *const u8,
@@ -162,7 +159,7 @@ impl Rsdt {
                     let entry = *((rsdt_header as *const _ as usize
                                    + size_of::<RSDTHeader>() + i as usize * 4) as *const u32);
 
-                    let hdr = &*(phys_to_physmap(entry as PhysAddr) as *const RSDTHeader);
+                    let hdr = &*(PhysAddr(entry as usize).to_mapped().0 as *const RSDTHeader);
 
                     if &hdr.signature == b"APIC"
                        && checksum(hdr as *const _ as *const u8, hdr.length as isize) {
