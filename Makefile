@@ -52,8 +52,8 @@ $(kernel): cargo $(rust_os) $(assembly_object_files) $(linker_script)
 build:
 	./update_core_nightly.sh ../rust
 
-cargo: build
-	RUSTFLAGS="-L ./build -Z no-landing-pads"  cargo build --target $(target) --verbose
+cargo:
+	RUSTFLAGS="-L ./build -Z no-landing-pads"  xargo build --target $(target) --verbose
 
 # compile assembly files
 build/arch/$(arch)/asm/%.o: src/arch/$(arch)/asm/%.asm

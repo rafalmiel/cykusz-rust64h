@@ -82,7 +82,7 @@ where
     pub fn next_level_mut(&mut self, idx: usize) -> Option<&mut Table<L::NextLevel>> {
         let entry = &self.entries[idx];
 
-        if !entry.contains(entry::PRESENT) {
+        if !entry.contains(entry::Entry::PRESENT) {
             return None
         }
 
@@ -92,7 +92,7 @@ where
     pub fn alloc_next_level(&mut self, idx: usize) -> &mut Table<L::NextLevel> {
         let entry = &mut self.entries[idx];
 
-        if !entry.contains(entry::PRESENT) {
+        if !entry.contains(entry::Entry::PRESENT) {
             let frame = ::arch::mm::phys::allocate().expect("Out of memory!");
 
             Table::<L::NextLevel>::new_at_frame_mut(&frame).clear();
@@ -100,7 +100,7 @@ where
             entry.set_frame(&frame);
         }
 
-        entry.set_flags(entry::PRESENT | entry::WRITABLE | entry::USER);
+        entry.set_flags(entry::Entry::PRESENT | entry::Entry::WRITABLE | entry::Entry::USER);
 
         Table::<L::NextLevel>::new_at_frame_mut(&Frame::new(entry.address()))
     }
@@ -113,8 +113,8 @@ where
     pub fn set_hugepage(&mut self, idx: usize, frame: &Frame) {
         let entry = &mut self.entries[idx];
 
-        if !entry.contains(entry::PRESENT) {
-            entry.set_frame_flags(&frame, entry::PRESENT | entry::WRITABLE | entry::HUGE_PAGE);
+        if !entry.contains(entry::Entry::PRESENT) {
+            entry.set_frame_flags(&frame, entry::Entry::PRESENT | entry::Entry::WRITABLE | entry::Entry::HUGE_PAGE);
         }
     }
 }
@@ -126,50 +126,50 @@ where
     pub fn alloc(&mut self, idx: usize) {
         let entry = &mut self.entries[idx];
 
-        if !entry.contains(entry::PRESENT) {
+        if !entry.contains(entry::Entry::PRESENT) {
             let frame = ::arch::mm::phys::allocate().expect("Out of memory!");
 
             Table::<L>::new_at_frame_mut(&frame).clear();
 
-            entry.set_frame_flags(&frame, entry::PRESENT | entry::WRITABLE);
+            entry.set_frame_flags(&frame, entry::Entry::PRESENT | entry::Entry::WRITABLE);
         }
     }
 
     pub fn set(&mut self, idx: usize, frame: &Frame) {
         let entry = &mut self.entries[idx];
 
-        if !entry.contains(entry::PRESENT) {
-            entry.set_frame_flags(&frame, entry::PRESENT | entry::WRITABLE);
+        if !entry.contains(entry::Entry::PRESENT) {
+            entry.set_frame_flags(&frame, entry::Entry::PRESENT | entry::Entry::WRITABLE);
         }
     }
 
     pub fn alloc_set_flags(&mut self, idx: usize, flags: entry::Entry) {
         let entry = &mut self.entries[idx];
 
-        if !entry.contains(entry::PRESENT) {
+        if !entry.contains(entry::Entry::PRESENT) {
             let frame = ::arch::mm::phys::allocate().expect("Out of memory!");
 
             Table::<L>::new_at_frame_mut(&frame).clear();
 
-            entry.set_frame_flags(&frame, flags | entry::PRESENT);
+            entry.set_frame_flags(&frame, flags | entry::Entry::PRESENT);
         } else {
             let frame = Frame::new(entry.address());
-            entry.set_frame_flags(&frame, flags | entry::PRESENT);
+            entry.set_frame_flags(&frame, flags | entry::Entry::PRESENT);
         }
     }
 
     pub fn set_flags(&mut self, idx: usize, frame: &Frame, flags: entry::Entry) {
         let entry = &mut self.entries[idx];
 
-        if !entry.contains(entry::PRESENT) {
-            entry.set_frame_flags(&frame, entry::PRESENT | flags);
+        if !entry.contains(entry::Entry::PRESENT) {
+            entry.set_frame_flags(&frame, entry::Entry::PRESENT | flags);
         }
     }
 
     pub fn unmap(&mut self, idx: usize) {
         let entry = &mut self.entries[idx];
 
-        if entry.contains(entry::PRESENT) {
+        if entry.contains(entry::Entry::PRESENT) {
             let frame = ::arch::mm::phys::Frame::new(entry.address());
 
             ::arch::mm::phys::deallocate(&frame);

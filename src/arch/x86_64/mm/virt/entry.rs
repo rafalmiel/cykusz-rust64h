@@ -29,14 +29,14 @@ impl Entry {
     pub fn from_kernel_flags(flags: virt::PageFlags) -> Entry {
         let mut res: Entry = Entry::new_empty();
 
-        if flags.contains(virt::NO_EXECUTE) {
-            res.insert(NO_EXECUTE);
+        if flags.contains(virt::PageFlags::NO_EXECUTE) {
+            res.insert(Entry::NO_EXECUTE);
         }
-        if flags.contains(virt::USER) {
-            res.insert(USER);
+        if flags.contains(virt::PageFlags::USER) {
+            res.insert(Entry::USER);
         }
-        if flags.contains(virt::WRITABLE) {
-            res.insert(WRITABLE);
+        if flags.contains(virt::PageFlags::WRITABLE) {
+            res.insert(Entry::WRITABLE);
         }
 
         return res;
@@ -69,7 +69,7 @@ impl Entry {
     }
 
     pub fn frame(&self) -> Option<Frame> {
-        if self.contains(PRESENT) {
+        if self.contains(Entry::PRESENT) {
             Some(Frame::new(self.address()))
         } else {
             None
@@ -78,14 +78,15 @@ impl Entry {
 
     pub fn set_frame_flags(&mut self, frame: &Frame, flags: Entry) {
         self.bits = frame.address().0;
-        self.insert(flags | USER);
+        self.insert(flags | Entry::USER);
     }
 
     pub fn set_frame(&mut self, frame: &Frame) {
+
         self.bits = frame.address().0;
     }
 
     pub fn set_flags(&mut self, flags: Entry) {
-        self.insert(flags | USER);
+        self.insert(flags | Entry::USER);
     }
 }

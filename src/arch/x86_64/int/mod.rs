@@ -48,6 +48,7 @@ pub fn set_int(i: u32, idt_idx: u32) {
 }
 
 pub fn fire_timer() {
+    set_int(remap_irq(0), 32);
     ACPI.lock().lapic.fire_timer();
 }
 

@@ -64,7 +64,7 @@ impl Task {
             *(sp.offset(-32) as *mut usize) = if int_enabled { 0x200 } else { 0x0 };                                            //rflags enable interrupts
             *(sp.offset(-40) as *mut usize) = cs.bits() as usize;//cs
             *(sp.offset(-48) as *mut usize) = fun as usize;                                     //rip
-            let mut ctx = sp.offset(-(::core::mem::size_of::<Context>() as isize + 48 + 11*8)) as *mut Context;
+            let ctx = sp.offset(-(::core::mem::size_of::<Context>() as isize + 48 + 11*8)) as *mut Context;
             (*ctx).rip = isr_return as usize;
             Task {
                 ctx: ContextMutPtr(ctx),

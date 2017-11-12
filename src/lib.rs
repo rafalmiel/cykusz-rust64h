@@ -9,6 +9,8 @@
 #![feature(alloc)]
 #![feature(allocator_api)]
 #![feature(global_allocator)]
+#![feature(const_unsafe_cell_new)]
+#![feature(const_ptr_null_mut)]
 
 #![allow(dead_code)]
 
@@ -67,7 +69,7 @@ pub fn rust_main() {
     kernel::sched::create_kernel_task(task2);
 
     kernel::sched::create_user_task(
-        unsafe {::core::mem::transmute::<usize, fn() -> ()>(0x400000) }, 
+        unsafe { ::core::mem::transmute::<usize, fn() -> ()>(0x400000) }, 
         0x600000, 4096);
 
     kernel::int::fire_timer();

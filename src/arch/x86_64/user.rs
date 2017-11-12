@@ -7,10 +7,10 @@ pub fn init(mboot_info: &multiboot2::Info) {
         //let string = unsafe { ::core::str::from_utf8_unchecked(mtag.name) };
 
         // Copy user program to user mapping!
-        map_flags(VirtAddr(0x400000), ::kernel::mm::virt::USER | ::kernel::mm::virt::WRITABLE);
+        map_flags(VirtAddr(0x400000), ::kernel::mm::virt::PageFlags::USER | ::kernel::mm::virt::PageFlags::WRITABLE);
 
         // Allocate stack data
-        map_flags(VirtAddr(0x600000), ::kernel::mm::virt::USER | ::kernel::mm::virt::WRITABLE);
+        map_flags(VirtAddr(0x600000), ::kernel::mm::virt::PageFlags::USER | ::kernel::mm::virt::PageFlags::WRITABLE);
 
         for (i, ptr) in (mtag.mod_start..mtag.mod_end).enumerate() {
             unsafe {

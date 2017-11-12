@@ -52,7 +52,7 @@ pub fn map_flags(virt: VirtAddr, flags: virt::PageFlags) {
 }
 
 pub fn map(virt: VirtAddr) {
-    map_flags(virt, virt::WRITABLE);
+    map_flags(virt, virt::PageFlags::WRITABLE);
 }
 
 pub fn unmap(virt: VirtAddr) {
@@ -94,10 +94,10 @@ fn remap(mboot_info: &::drivers::multiboot2::Info) {
         }
 
         if (elf.flags as usize & ElfSectionFlags::Writable as usize) == ElfSectionFlags::Writable as usize {
-            flags.insert(virt::WRITABLE);
+            flags.insert(virt::PageFlags::WRITABLE);
         }
         if (elf.flags as usize & ElfSectionFlags::Executable as usize) == 0 {
-            flags.insert(virt::NO_EXECUTE);
+            flags.insert(virt::PageFlags::NO_EXECUTE);
         }
 
         for addr in (s..e).step_by(PAGE_SIZE) {

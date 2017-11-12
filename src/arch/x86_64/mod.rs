@@ -23,7 +23,7 @@ pub extern "C" fn x86_64_rust_main(multiboot_addr: PhysAddr, stack_top: VirtAddr
 
     println!("[ OK ] Initialised long mode");
 
-    let mboot = unsafe { &multiboot2::load(multiboot_addr.to_mapped()) };
+    let mboot = unsafe { multiboot2::load(multiboot_addr.to_mapped()) };
 
     mm::init(mboot);
 
