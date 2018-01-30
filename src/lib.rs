@@ -11,6 +11,7 @@
 #![feature(global_allocator)]
 #![feature(const_unsafe_cell_new)]
 #![feature(const_ptr_null_mut)]
+#![feature(ptr_internals)]
 
 #![allow(dead_code)]
 

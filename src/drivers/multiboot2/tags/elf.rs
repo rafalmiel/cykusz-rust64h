@@ -54,10 +54,12 @@ pub enum ElfSectionFlags {
 
 impl Elf {
     pub fn sections(&'static self) -> ElfSectionIter {
-        ElfSectionIter {
-            current:    &self.first_entry,
-            remaining:  self.num - 1,
-            entry_size: self.entsize,
+        unsafe {
+            ElfSectionIter {
+                current:    &self.first_entry,
+                remaining:  self.num - 1,
+                entry_size: self.entsize,
+            }
         }
     }
 }
